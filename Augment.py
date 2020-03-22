@@ -76,18 +76,23 @@ def randomAmplitude(spec):
     print(spec[:50])
     return spec
 
-def paddingorsampling(spect,seq_length):
-    sample_length = spect.shape[1]
-    if sample_length < seq_length:
-        spect = padding(spect,seq_length=seq_length)
-    else:
-        spect = sampling(spect,seq_length=seq_length)
-    return spect
-
-def padding(spect,seq_length=None, dim = 1):
+def paddingorsampling(spect,seq_length,augment):
     sampler = lambda x: x // 2
     sample_length = spect.shape[1]
+    if augment:
+        sampler = lambda x: np.random.randint(
+                0, x, size=(1,), dtype='long'
+                ).item()
 
+    if sample_length < seq_length:
+        spect = padding(spect,seq_length=seq_length,sampler)
+    else:
+        spect = sampling(spect,seq_length=seq_length,sampler)
+    return spect
+
+def padding(spect,seq_length=None, dim = 1,sampler):
+
+    sample_length = spect.shape[1]
     start = sampler(seq_length - sample_length) # returns random start number
     end = start + sample_length                                     # random end
     shape = list(spect.shape)                                       # returns a list with similar shape to spect
@@ -104,8 +109,8 @@ def padding(spect,seq_length=None, dim = 1):
         padded_spect[:,:,:,start:end] = spect.real
     return padded_spect
 
-def sampling(spect,seq_length=None, dim =1):
-    sampler = lambda x: x // 2
+def sampling(spect,seq_length=None, dim =1,sampler):
+
     sample_length = spect.shape[1]
     if sample_length > seq_length:
         start = sampler(sample_length - seq_length)

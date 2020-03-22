@@ -34,13 +34,13 @@ class Dataloader():
             x.append(seq[pos:pos + size])
         return x
 
-    def augmentation(self,x,file_path):
-        x = randomAmplitude(x)
-        x = randomPitchShift(x)
-        x = randomTimeStretch(x)
+    def augmentation(self,mels,file_path):
+        mels = randomAmplitude01(mels)
+        mels = randomPitchShift01(mels)
+        mels = randomTimeStretch01(mels)
         if self.file_to_int.get(file_path) == 0:
-               x = addNoise(x)
-        return x
+               mels = addNoise(mels)
+        return mels
 
 
     def load_audio_file(self, file_path):
@@ -50,8 +50,7 @@ class Dataloader():
         #print(file_path)
         x, sr = librosa.core.load(file_path, sr=44100, mono=True)  # , sr=16000
         x = librosa.effects.preemphasis(x, coef=0.98)
-        if self.Aug:
-            x = self.augmentation(x,file_path)
+
 
         data = self.preprocess_audio_mel_T(x, sample_rate=sr)
         return data
@@ -64,9 +63,12 @@ class Dataloader():
         #print("stft shape ", stft.shape)
         mels = librosa.feature.melspectrogram(audio, n_fft=self.n_fft, hop_length=self.hop_length, sr=self.sample_r,
                                               fmin=self.fmin, fmax=self.fmax, n_mels=self.bins)
+        if self.Aug:
+            mels = self.augmentation(mels,file_path)
+
         mel_db = librosa.power_to_db(mels)
         mel_db02 = np.clip((mel_db - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
-        mel_db03 = paddingorsampling(mel_db02, self.Time)
+        mel_db03 = paddingorsampling(mel_db02, self.Time,self.Aug)
 
         #(spec - self.ref_level_db - self.min_level_db) / -self.min_level_db, 0, 1
 
