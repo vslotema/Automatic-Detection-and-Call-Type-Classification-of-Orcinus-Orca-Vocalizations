@@ -103,7 +103,7 @@ if __name__=='__main__':
 
     def get_model_mel():
 
-        inp = Input(shape=(256, 128, 1))
+        inp = Input(shape=(128, 256, 1))
         norm_inp = BatchNormalization()(inp)
         img_1 = Convolution2D(16, kernel_size=(3, 3), activation=activations.relu)(norm_inp)
         img_1 = GlobalMaxPool2D()(img_1)
@@ -121,9 +121,9 @@ if __name__=='__main__':
         return model
 
     # In[15]:
-
+    #model = get_model_mel()
     model = resnet.ResnetBuilder.build_resnet_18((128,256,1),1)
-    opt = optimizers.Adam(lr=0.0005, beta_1=0.9, beta_2=0.999, amsgrad=False)
+    opt = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, amsgrad=False)
     model.compile(optimizer =opt,loss="binary_crossentropy", metrics=["acc"])
     model.summary()
 
@@ -160,7 +160,7 @@ if __name__=='__main__':
     start = timeit.default_timer()
     H = model.fit_generator(generator=training_generator, epochs=epochs, steps_per_epoch=len(tr_files) // batch_size,
                             validation_data=validation_generator, validation_steps=len(val_files) // batch_size,use_multiprocessing=False,
-                            workers=8,verbose=1,
+                            workers=4,verbose=1,
                             # max_queue_size=30,use_multiprocessing=False,workers=8,
                             callbacks=[my_debug_weights])
     stop = timeit.default_timer()

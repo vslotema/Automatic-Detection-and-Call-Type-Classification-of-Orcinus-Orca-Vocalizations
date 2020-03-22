@@ -34,12 +34,10 @@ class Dataloader():
             x.append(seq[pos:pos + size])
         return x
 
-    def augmentation(self,mels,file_path):
-        mels = randomAmplitude01(mels)
-        mels = randomPitchShift01(mels)
-        mels = randomTimeStretch01(mels)
-        if self.file_to_int.get(file_path) == 0:
-               mels = addNoise(mels)
+    def augmentation(self,mels):
+        mels = randomAmplitude(mels)
+        mels = randomPitchShift(mels)
+        mels = randomTimeStretch(mels)
         return mels
 
 
@@ -50,13 +48,14 @@ class Dataloader():
         #print(file_path)
         x, sr = librosa.core.load(file_path, sr=44100, mono=True)  # , sr=16000
         x = librosa.effects.preemphasis(x, coef=0.98)
+        if self.file_to_int.get(file_path) == 0:
+               x = addNoise(x)
 
 
-        data = self.preprocess_audio_mel_T(x, sample_rate=sr)
+        data = self.preprocess_audio_mel_T(x)
         return data
 
-    def preprocess_audio_mel_T(self, audio, sample_rate=44100, window_size=20,  # log_specgram
-                               step_size=10, eps=1e-10):
+    def preprocess_audio_mel_T(self, audio):
         #  mel_spec = librosa.feature.melspectrogram(y=audio, sr=sample_rate, n_mels=n_mels)
        # stft = librosa.stft(audio.astype('float'), n_fft=self.n_fft, hop_length=self.hop_length, window = 'hann', center=False)
 
@@ -64,7 +63,7 @@ class Dataloader():
         mels = librosa.feature.melspectrogram(audio, n_fft=self.n_fft, hop_length=self.hop_length, sr=self.sample_r,
                                               fmin=self.fmin, fmax=self.fmax, n_mels=self.bins)
         if self.Aug:
-            mels = self.augmentation(mels,file_path)
+            mels = self.augmentation(mels)
 
         mel_db = librosa.power_to_db(mels)
         mel_db02 = np.clip((mel_db - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
@@ -73,16 +72,6 @@ class Dataloader():
         #(spec - self.ref_level_db - self.min_level_db) / -self.min_level_db, 0, 1
 
         return mel_db03.T
-
-    def interpolate(self, spec):
-        n_fft = (spec.shape[2] - 1) * 2
-
-        if self.sample_r is not None and n_fft is not None:
-            min_bin = int(max(0, math.floor(n_fft * self.fmin / self.sample_r)))
-            max_bin = int(min(n_fft - 1, math.ceil(n_fft * self.fmax / self.sample_r)))
-            spec = spec[:, :, min_bin:max_bin]
-        return spec
-
 
 class Train_Generator(keras.utils.Sequence):
 
