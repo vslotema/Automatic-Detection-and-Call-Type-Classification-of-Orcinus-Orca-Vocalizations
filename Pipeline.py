@@ -44,10 +44,10 @@ if __name__=='__main__':
 
     # In[]:
 
-    large_data = "C:\\Users\\vien\\PycharmProjects\\CNN\\wav\\wav\\"
-    large_data_csv = "C:\\Users\\vien\\PycharmProjects\\CNN\\labels\\DeepAL_ComParE.csv"
-    small_data = "C:\\Users\\vien\\PycharmProjects\\CNN\\wav_small\\"
-    small_data_csv = "C:\\Users\\vien\\PycharmProjects\\CNN\\labels\\labels.csv"
+    large_data = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\wav\\"
+    large_data_csv = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\lab\\DeepAL_ComParE.csv"
+    small_data = "C:\\myProjects\\THESIS\\Test_Pipeline01\\wav\\"
+    small_data_csv = "C:\\myProjects\\THESIS\\Test_Pipeline01\\labels\\labels.csv"
 
     wav_path = large_data
     data_small=pd.read_csv(small_data_csv)
@@ -55,10 +55,10 @@ if __name__=='__main__':
     labels = data_orig['label']
     filenames = data_orig['file_name']
 
-    train, test = np.split(data_orig.sample(frac=1), [int(.8 * len(data_orig))])
+    train, test = np.split(data_orig.sample(frac=1), [int(.85 * len(data_orig))])
     test.to_csv(TEST_FILES_CSV)
 
-    tr_files, val_files = train_test_split(sorted(wav_path + train.file_name.values), test_size=0.1, random_state=0)
+    tr_files, val_files = train_test_split(sorted(wav_path + train.file_name.values), test_size=0.15, random_state=0)
     print('length train files ', len(tr_files))
     print('length val_files ', len(val_files))
     print("training files ", tr_files)

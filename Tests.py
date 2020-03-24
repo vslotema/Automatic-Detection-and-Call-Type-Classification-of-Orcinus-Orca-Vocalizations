@@ -11,8 +11,6 @@ class SimpleTest(unittest.TestCase):
             print("size list ", len(list))
 
        # self.assertEqual(len(set),len(indexes))
-        
+
        # for i in indexes:
         #    self.assertTrue(indexes[i] in set)
-
-
