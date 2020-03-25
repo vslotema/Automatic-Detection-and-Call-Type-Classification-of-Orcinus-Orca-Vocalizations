@@ -13,9 +13,11 @@ import threading
 
 from keras import optimizers, losses, activations, models
 from keras.layers import Dense, Input, Dropout, BatchNormalization, Convolution2D, MaxPooling2D, GlobalMaxPool2D
+from keras.callbacks import ReduceLROnPlateau
 from DebugWeights import *
 import timeit
 import resnet
+import multiprocessing
 
 
 from scipy import stats
@@ -24,7 +26,7 @@ if __name__=='__main__':
     # In[2]:
 
     batch_size = 32
-    epochs = 50
+    epochs = 10
     # In[2]:
     t = time.localtime()
     ID = time.strftime("%H-%M-%S", t)
@@ -156,13 +158,15 @@ if __name__=='__main__':
 
     training_generator = Train_Generator(tr_files, file_to_int,augment=True,batch_size=batch_size)
     validation_generator = Train_Generator(val_files, file_to_int,augment=False,batch_size=batch_size)
+    reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5,mode='max',
+                              patience=1, min_delta=1e-3)
 
     start = timeit.default_timer()
     H = model.fit_generator(generator=training_generator, epochs=epochs, steps_per_epoch=len(tr_files) // batch_size,
                             validation_data=validation_generator, validation_steps=len(val_files) // batch_size,use_multiprocessing=False,
-                            workers=4,verbose=1,
+                            workers=multiprocessing.cpu_count(),verbose=1,
                             # max_queue_size=30,use_multiprocessing=False,workers=8,
-                            callbacks=[my_debug_weights])
+                            callbacks=[my_debug_weights,reduce_lr])
     stop = timeit.default_timer()
     print('Time: ', stop - start)
 

@@ -71,6 +71,7 @@ for i in array_preds:
 df = pd.DataFrame(test_csv.file_name.values, columns=["file_name"])
 df['label'] = test_csv.label.values
 df['pred_label'] = pred_labels
+df['pred_score'] = array_preds
 
 
 df.to_csv(folder + "res.csv", index=False)

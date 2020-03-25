@@ -50,22 +50,14 @@ class MyDebugWeights(Callback):
         self.tf_session = K.get_session()
         self.weights_csv = weights_csv
         self.gradients_csv = gradients_csv
-        #self.field_names = ['gradient','norm','mean','std']
-        #append_list_as_row(self.gradients_csv,self.field_names)
+        self.field_names = ['gradient','norm','mean','std']
+        append_list_as_row(self.gradients_csv,self.field_names)
         self.field_names02=['epoch','layer','norm','mean','std']
         append_list_as_row(self.weights_csv,self.field_names02)
 
 
     def on_epoch_end(self, epoch, logs=None):
 
-    #    gradients = get_gradients(self.train_files,self.train_labels,self.model)
-
-    #    for i in range(len(gradients)):
-    #        n, m, s = calc_stats01(gradients[i])
-    #        row_dict = {'gradient': i, 'norm':n,'mean':m,'std':s}
-    #        append_dict_as_row(self.gradients_csv, row_dict, self.field_names)
-            #print("i ", i)
-            #print("grad_{:d}".format(i), calc_stats01(gradients[i]))
         for layer in self.model.layers:
             name = layer.name
             for i, w in enumerate(layer.weights):
@@ -75,8 +67,16 @@ class MyDebugWeights(Callback):
                                      w_norm, w_mean, w_std))
 
     def on_train_end(self, logs=None):
-        for e, k, n, m, s in self.weights:
+        gradients = get_gradients(self.train_files,self.train_labels,self.model)
 
+        for i in range(len(gradients)):
+            n, m, s = calc_stats01(gradients[i])
+            row_dict = {'gradient': i, 'norm':n,'mean':m,'std':s}
+            append_dict_as_row(self.gradients_csv, row_dict, self.field_names)
+            print("i ", i)
+            print("grad_{:d}".format(i), calc_stats01(gradients[i]))
+
+        for e, k, n, m, s in self.weights:
             row_dict = {'epoch':e,'layer': k, 'norm':n,'mean':m,'std':s}
             append_dict_as_row(self.weights_csv, row_dict, self.field_names02)
             #print("{:3d} {:20s} {:7.3f} {:7.3f} {:7.3f}".format(e, k, n, m, s))
