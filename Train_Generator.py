@@ -42,10 +42,7 @@ class Dataloader():
 
 
     def load_audio_file(self, file_path):
-        # print('FILE PATH VALUE', file_to_int.get(file_path))'
-        #curr = "THREAD {}".format(threading.current_thread().getName())
-        #print(curr)
-        #print(file_path)
+
         x, sr = librosa.core.load(file_path, sr=44100, mono=True)  # , sr=16000
         x = librosa.effects.preemphasis(x, coef=0.98)
         if self.file_to_int.get(file_path) == 0:
@@ -56,22 +53,21 @@ class Dataloader():
         return data
 
     def preprocess_audio_mel_T(self, audio):
-        #  mel_spec = librosa.feature.melspectrogram(y=audio, sr=sample_rate, n_mels=n_mels)
-       # stft = librosa.stft(audio.astype('float'), n_fft=self.n_fft, hop_length=self.hop_length, window = 'hann', center=False)
 
-        #print("stft shape ", stft.shape)
+        if self.Aug:
+            center = False
+        else:
+            center = True
         mels = librosa.feature.melspectrogram(audio, n_fft=self.n_fft, hop_length=self.hop_length, sr=self.sample_r,
-                                              fmin=self.fmin, fmax=self.fmax, n_mels=self.bins)
+                                              fmin=self.fmin, fmax=self.fmax, n_mels=self.bins,center=center)
         if self.Aug:
             mels = self.augmentation(mels)
 
         mel_db = librosa.power_to_db(mels)
-        mel_db02 = np.clip((mel_db - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
-        mel_db03 = paddingorsampling(mel_db02, self.Time,self.Aug)
+        mel_db = np.clip((mel_db - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
+        mel_db = paddingorsampling(mel_db, self.Time,self.Aug)
 
-        #(spec - self.ref_level_db - self.min_level_db) / -self.min_level_db, 0, 1
-
-        return mel_db03.T
+        return mel_db.T
 
 class Train_Generator(keras.utils.Sequence):
 

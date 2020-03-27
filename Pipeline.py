@@ -13,6 +13,7 @@ import threading
 
 from keras import optimizers, losses, activations, models
 from keras.layers import Dense, Input, Dropout, BatchNormalization, Convolution2D, MaxPooling2D, GlobalMaxPool2D
+from keras.callbacks import ReduceLROnPlateau
 from DebugWeights import *
 import timeit
 import resnet
@@ -128,7 +129,7 @@ if __name__=='__main__':
     # In[15]:
     #model = get_model_mel()
     model = resnet.ResnetBuilder.build_resnet_18((128,256,1),1)
-    opt = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, amsgrad=False)
+    opt = optimizers.Adam(lr=0.00001, beta_1=0.5, beta_2=0.999, amsgrad=False)
     model.compile(optimizer =opt,loss="binary_crossentropy", metrics=["acc"])
     model.summary()
 
@@ -161,13 +162,15 @@ if __name__=='__main__':
 
     training_generator = Train_Generator(tr_files, file_to_int,augment=True,batch_size=batch_size)
     validation_generator = Train_Generator(val_files, file_to_int,augment=False,batch_size=batch_size)
+    reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5,mode='max',
+                              patience=4, min_delta=1e-3,min_lr=0.0001)
+    tb = keras.callbacks.TensorBoard(log_dir='./Graph/{}'.format(ID), histogram_freq=0, write_graph=True, write_images=True)
 
     start = timeit.default_timer()
     H = model.fit_generator(generator=training_generator, epochs=epochs, steps_per_epoch=len(tr_files) // batch_size,
                             validation_data=validation_generator, validation_steps=len(val_files) // batch_size,use_multiprocessing=False,
                             workers=multiprocessing.cpu_count(),verbose=1,
-                            # max_queue_size=30,use_multiprocessing=False,workers=8,
-                            callbacks=[my_debug_weights])
+                            callbacks=[tb,my_debug_weights,reduce_lr])
     stop = timeit.default_timer()
     print('Time: ', stop - start)
 
