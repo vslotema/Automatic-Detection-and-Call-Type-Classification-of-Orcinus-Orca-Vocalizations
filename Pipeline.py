@@ -16,6 +16,7 @@ from keras.layers import Dense, Input, Dropout, BatchNormalization, Convolution2
 from DebugWeights import *
 import timeit
 import resnet
+import multiprocessing
 
 
 from scipy import stats
@@ -43,11 +44,15 @@ if __name__=='__main__':
     WEIGHTS_CSV = "{}".format(dir) + "\\weights_{}.csv".format(ID)
 
     # In[]:
+    large_data = "C:\\Users\\vien\\PycharmProjects\\CNN\\wav\\wav\\"
+    large_data_csv = "C:\\Users\\vien\\PycharmProjects\\CNN\\labels\\DeepAL_ComParE.csv"
+    small_data = "C:\\Users\\vien\\PycharmProjects\\CNN\\wav_small\\"
+    small_data_csv = "C:\\Users\\vien\\PycharmProjects\\CNN\\labels\\labels.csv"
 
-    large_data = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\wav\\"
-    large_data_csv = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\lab\\DeepAL_ComParE.csv"
-    small_data = "C:\\myProjects\\THESIS\\Test_Pipeline01\\wav\\"
-    small_data_csv = "C:\\myProjects\\THESIS\\Test_Pipeline01\\labels\\labels.csv"
+#    large_data = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\wav\\"
+#    large_data_csv = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\lab\\DeepAL_ComParE.csv"
+#    small_data = "C:\\myProjects\\THESIS\\Test_Pipeline01\\wav\\"
+#    small_data_csv = "C:\\myProjects\\THESIS\\Test_Pipeline01\\labels\\labels.csv"
 
     wav_path = large_data
     data_small=pd.read_csv(small_data_csv)
@@ -160,7 +165,7 @@ if __name__=='__main__':
     start = timeit.default_timer()
     H = model.fit_generator(generator=training_generator, epochs=epochs, steps_per_epoch=len(tr_files) // batch_size,
                             validation_data=validation_generator, validation_steps=len(val_files) // batch_size,use_multiprocessing=False,
-                            workers=4,verbose=1,
+                            workers=multiprocessing.cpu_count(),verbose=1,
                             # max_queue_size=30,use_multiprocessing=False,workers=8,
                             callbacks=[my_debug_weights])
     stop = timeit.default_timer()
