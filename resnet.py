@@ -6,12 +6,12 @@ from keras.layers import (
     Input,
     Activation,
     Dense,
-    Flatten
+    Flatten,
+    GlobalAveragePooling2D
 )
 from keras.layers.convolutional import (
     Conv2D,
     MaxPooling2D,
-    AveragePooling2D
 )
 import tensorflow as tf
 from keras.layers.merge import add
@@ -41,7 +41,8 @@ def _conv_bn_relu(**conv_params):
         conv = Conv2D(filters=filters, kernel_size=kernel_size,
                       strides=strides, padding=padding,
                       kernel_initializer=kernel_initializer,
-                      kernel_regularizer=kernel_regularizer)(input)
+                      kernel_regularizer=kernel_regularizer,
+                      use_bias=False)(input)
         return _bn_relu(conv)
 
     return f
@@ -63,7 +64,8 @@ def _bn_relu_conv(**conv_params):
         return Conv2D(filters=filters, kernel_size=kernel_size,
                       strides=strides, padding=padding,
                       kernel_initializer=kernel_initializer,
-                      kernel_regularizer=kernel_regularizer)(activation)
+                      kernel_regularizer=kernel_regularizer,
+                      use_bias=False)(activation)
 
     return f
 
@@ -88,7 +90,8 @@ def _shortcut(input, residual):
                           strides=(stride_width, stride_height),
                           padding="valid",
                           kernel_initializer="he_normal",
-                          kernel_regularizer=l2(0.0001))(input)
+                          kernel_regularizer=l2(0.0001),
+                          use_bias=False)(input)
 
     return add([shortcut, residual])
 
@@ -120,7 +123,8 @@ def basic_block(filters, init_strides=(1, 1), is_first_block_of_first_layer=Fals
                            strides=init_strides,
                            padding="same",
                            kernel_initializer="he_normal",
-                           kernel_regularizer=l2(1e-4))(input)
+                           kernel_regularizer=l2(1e-4),
+                           use_bias=False)(input)
         else:
             conv1 = _bn_relu_conv(filters=filters, kernel_size=(3, 3),
                                   strides=init_strides)(input)
@@ -145,7 +149,8 @@ def bottleneck(filters, init_strides=(1, 1), is_first_block_of_first_layer=False
                               strides=init_strides,
                               padding="same",
                               kernel_initializer="he_normal",
-                              kernel_regularizer=l2(1e-4))(input)
+                              kernel_regularizer=l2(1e-4),
+                              use_bias=False)(input)
         else:
             conv_1_1 = _bn_relu_conv(filters=filters, kernel_size=(1, 1),
                                      strides=init_strides)(input)
@@ -223,11 +228,10 @@ class ResnetBuilder(object):
 
         # Classifier block
         block_shape = K.int_shape(block)
-        pool2 = AveragePooling2D(pool_size=(block_shape[ROW_AXIS], block_shape[COL_AXIS]),
-                                 strides=(1, 1))(block)
-        flatten1 = Flatten()(pool2)
+        pool2 = GlobalAveragePooling2D(data_format='channels_last')(block)
+    #    flatten1 = Flatten()(pool2)
         dense = Dense(units=num_outputs, kernel_initializer="he_normal",
-                      activation="sigmoid")(flatten1)
+                      activation="sigmoid")(pool2)
 
         model = Model(inputs=input, outputs=dense)
         return model

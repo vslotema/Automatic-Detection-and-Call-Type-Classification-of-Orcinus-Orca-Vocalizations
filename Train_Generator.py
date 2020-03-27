@@ -38,6 +38,7 @@ class Dataloader():
         mels = randomAmplitude(mels)
         mels = randomPitchShift(mels)
         mels = randomTimeStretch(mels)
+        mels = paddingorsampling(mels, self.Time,self.Aug)
         return mels
 
 
@@ -60,18 +61,22 @@ class Dataloader():
        # stft = librosa.stft(audio.astype('float'), n_fft=self.n_fft, hop_length=self.hop_length, window = 'hann', center=False)
 
         #print("stft shape ", stft.shape)
+        if self.aug:
+            center = False
+        else:
+            center = True
         mels = librosa.feature.melspectrogram(audio, n_fft=self.n_fft, hop_length=self.hop_length, sr=self.sample_r,
-                                              fmin=self.fmin, fmax=self.fmax, n_mels=self.bins)
+                                              fmin=self.fmin, fmax=self.fmax, n_mels=self.bins,center=center)
         if self.Aug:
             mels = self.augmentation(mels)
 
         mel_db = librosa.power_to_db(mels)
-        mel_db02 = np.clip((mel_db - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
-        mel_db03 = paddingorsampling(mel_db02, self.Time,self.Aug)
+        mel_db = np.clip((mel_db - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
+
 
         #(spec - self.ref_level_db - self.min_level_db) / -self.min_level_db, 0, 1
 
-        return mel_db03.T
+        return mel_db.T
 
 class Train_Generator(keras.utils.Sequence):
 

@@ -26,7 +26,7 @@ if __name__=='__main__':
     # In[2]:
 
     batch_size = 32
-    epochs = 10
+    epochs = 50
     # In[2]:
     t = time.localtime()
     ID = time.strftime("%H-%M-%S", t)
@@ -125,7 +125,7 @@ if __name__=='__main__':
     # In[15]:
     #model = get_model_mel()
     model = resnet.ResnetBuilder.build_resnet_18((128,256,1),1)
-    opt = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, amsgrad=False)
+    opt = optimizers.Adam(lr=00001, beta_1=0.5, beta_2=0.999, amsgrad=False)
     model.compile(optimizer =opt,loss="binary_crossentropy", metrics=["acc"])
     model.summary()
 
@@ -159,7 +159,7 @@ if __name__=='__main__':
     training_generator = Train_Generator(tr_files, file_to_int,augment=True,batch_size=batch_size)
     validation_generator = Train_Generator(val_files, file_to_int,augment=False,batch_size=batch_size)
     reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5,mode='max',
-                              patience=1, min_delta=1e-3)
+                              patience=4, min_delta=1e-3,min_lr=0.0001)
 
     start = timeit.default_timer()
     H = model.fit_generator(generator=training_generator, epochs=epochs, steps_per_epoch=len(tr_files) // batch_size,
