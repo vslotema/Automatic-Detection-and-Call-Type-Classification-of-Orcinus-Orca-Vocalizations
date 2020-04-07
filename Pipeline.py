@@ -47,7 +47,6 @@ if __name__=='__main__':
 
 
     # In[]:
-
     def append_to_list(path_wav,file_csv):
         list_f = []
         csv = pd.read_csv(file_csv)
