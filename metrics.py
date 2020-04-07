@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-path = "2020-03-23_06-31-34\\"
+path = "2020-03-26_16-23-29\\"
 results = pd.read_csv(path + 'res.csv')
 print(results)
 
@@ -45,4 +45,4 @@ plt.show()
 auc_score = roc_auc_score(results.label.values,results.pred_score.values)
 print('AUC: %.3f' % auc_score)
 
-############## 
+##############

@@ -38,7 +38,6 @@ class Dataloader():
         mels = randomAmplitude(mels)
         mels = randomPitchShift(mels)
         mels = randomTimeStretch(mels)
-        mels = paddingorsampling(mels, self.Time,self.Aug)
         return mels
 
 
@@ -61,7 +60,7 @@ class Dataloader():
        # stft = librosa.stft(audio.astype('float'), n_fft=self.n_fft, hop_length=self.hop_length, window = 'hann', center=False)
 
         #print("stft shape ", stft.shape)
-        if self.aug:
+        if self.Aug:
             center = False
         else:
             center = True
@@ -72,6 +71,7 @@ class Dataloader():
 
         mel_db = librosa.power_to_db(mels)
         mel_db = np.clip((mel_db - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
+        mel_db = paddingorsampling(mel_db, self.Time,self.Aug)
 
 
         #(spec - self.ref_level_db - self.min_level_db) / -self.min_level_db, 0, 1

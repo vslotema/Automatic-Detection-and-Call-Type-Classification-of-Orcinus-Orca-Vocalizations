@@ -12,21 +12,27 @@ class_labels = [
     "noise",
     "orca",
 ]
-folder = "2020-03-23_06-31-34\\"
+
+split = "val"
+AEOTD = "AEOTD\\"
+path = "C:\\myProjects\\THESIS\\csv\\ORCASPOT_csv\\" + AEOTD
+path_wav = path + AEOTD + AEOTD
+
+folder = "2020-03-26_16-23-29\\"
 # Load the json file that contains the model's structure
-f = Path(folder + "model_structure_06-31-34.json")
+f = Path(folder + "model_structure_16-23-29.json")
 model_structure = f.read_text()
 
 # Recreate the Keras model object from the json data
 model = model_from_json(model_structure)
 
 # Re-load the model's trained weights
-model.load_weights(folder + "weights_06-31-34.h5")
+model.load_weights(folder + "weights_16-23-29.h5")
 
-test_csv = pd.read_csv(folder + "test_files_06-31-34.csv")
-wav_path = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\wav\\"
+test_csv = pd.read_csv(path + "new_{}_label.csv".format(split))
+#wav_path = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\wav\\"
 
-file_to_label = {wav_path + k: v for k, v in zip(test_csv.file_name.values, test_csv.label.values)}
+file_to_label = {path_wav + k: v for k, v in zip(test_csv.file_name.values, test_csv.label.values)}
 
 # In[8]:
 list_labels = sorted(list(set(test_csv.label.values)))  # Unique labels orca and noise
@@ -50,7 +56,7 @@ for i in tqdm(range(bag)):
 
     list_preds = []
 
-    for batch_files in tqdm(dl.chunker(wav_path + test_csv.file_name.values, size=16), total=len(list(test_csv)) // 16):
+    for batch_files in tqdm(dl.chunker(path_wav + test_csv.file_name.values, size=16), total=len(list(test_csv)) // 16):
         batch_data = [dl.load_audio_file(fpath) for fpath in batch_files]
         batch_data = np.array(batch_data)[:, :, :, np.newaxis]
         preds = model.predict(batch_data).tolist()
@@ -74,8 +80,8 @@ df['pred_label'] = pred_labels
 df['pred_score'] = array_preds
 
 
-df.to_csv(folder + "res.csv", index=False)
+df.to_csv(path + "res_{}.csv".format(split), index=False)
 
-results = pd.read_csv(folder + "res.csv")
+results = pd.read_csv(path + "res_{}.csv".format(split))
 print(confusion_matrix(results.label.values, results.pred_label.values))
 print(matthews_corrcoef(results.label.values, results.pred_label.values))
