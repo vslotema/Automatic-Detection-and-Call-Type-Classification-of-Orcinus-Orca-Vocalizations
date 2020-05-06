@@ -13,8 +13,8 @@ import threading
 
 from keras import optimizers, losses, activations, models
 from keras.layers import Dense, Input, Dropout, BatchNormalization, Convolution2D, MaxPooling2D, GlobalMaxPool2D
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping, TensorBoard, ModelCheckpoint
-from DebugWeights import *
+from keras.callbacks import ReduceLROnPlateau, EarlyStopping,  ModelCheckpoint
+#from DebugWeights import *
 import timeit
 import resnet
 import multiprocessing
@@ -25,8 +25,8 @@ from scipy import stats
 
     # In[2]:
 if __name__=='__main__':
-    batch_size = 32
-    epochs = 50
+    batch_size = 1
+    epochs = 1
     # In[2]:
     t = time.localtime()
     ID = time.strftime("%H-%M-%S", t)
@@ -57,21 +57,24 @@ if __name__=='__main__':
     tr_files = []
     val_files = []
 
-    path ="C:\\myProjects\\THESIS\\csv\\ORCASPOT_csv\\"
+    #path ="C:\\myProjects\\THESIS\\csv\\ORCASPOT_csv\\"
+    path = "C:\\myProjects\\THESIS\\ORCA-SPOT\\testdata\\"
+    tr_files += append_to_list(path,path + "train_lab.csv")
+    val_files+= append_to_list(path,path + "val_lab.csv")
 
-    AEOTD_wav = path + "AEOTD\\AEOTD\\"
-    AEOTD_lab= path + "AEOTD\\AEOTD_label\\"
-    tr_files += append_to_list(AEOTD_wav,AEOTD_lab+"train_label_man.csv")
-    val_files += append_to_list(AEOTD_wav,AEOTD_lab+"val_label_man.csv")
+   # AEOTD_wav = path + "AEOTD\\AEOTD\\"
+   # AEOTD_lab= path + "AEOTD\\AEOTD_label\\"
+  #  tr_files += append_to_list(AEOTD_wav,AEOTD_lab+"train_label_man.csv")
+   # val_files += append_to_list(AEOTD_wav,AEOTD_lab+"val_label_man.csv")
 
-    DLFD = path + "DLFD\\"
-    tr_files += append_to_list(DLFD, DLFD + "new_train_label.csv")
-    val_files += append_to_list(DLFD, DLFD + "new_val_label.csv")
+    #DLFD = path + "DLFD\\"
+    #tr_files += append_to_list(DLFD, DLFD + "new_train_label.csv")
+    #val_files += append_to_list(DLFD, DLFD + "new_val_label.csv")
 
-    OAC_wav = "C:\\myProjects\\THESIS\\Orchive\\orchive-extract\\extract\\"
-    OAC_lab = path + "OAC\\"
-    tr_files += append_to_list(OAC_wav, OAC_lab + "new_train_label.csv")
-    val_files += append_to_list(OAC_wav, OAC_lab + "new_val_label.csv")
+    #OAC_wav = "C:\\myProjects\\THESIS\\Orchive\\orchive-extract\\extract\\"
+    #OAC_lab = path + "OAC\\"
+   # tr_files += append_to_list(OAC_wav, OAC_lab + "new_train_label.csv")
+    #val_files += append_to_list(OAC_wav, OAC_lab + "new_val_label.csv")
 
     #large_data = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\wav\\"
     #large_data_csv = "C:\\myProjects\\THESIS\\DeepAL_ComParE\\DeepAL_ComParE\\ComParE2019_OrcaActivity\\lab\\DeepAL_ComParE.csv"
@@ -107,17 +110,19 @@ if __name__=='__main__':
         return file_to_label
 
     file_to_label_train = {}
-    file_to_label(file_to_label_train,AEOTD_wav,AEOTD_lab+"train_label_man.csv")
-    file_to_label(file_to_label_train,DLFD, DLFD + "new_train_label.csv")
-    file_to_label(file_to_label_train,OAC_wav, OAC_lab + "new_train_label.csv")
+    file_to_label(file_to_label_train,path, path + "train_lab.csv")
+    #file_to_label(file_to_label_train,AEOTD_wav,AEOTD_lab+"train_label_man.csv")
+    #file_to_label(file_to_label_train,DLFD, DLFD + "new_train_label.csv")
+    #file_to_label(file_to_label_train,OAC_wav, OAC_lab + "new_train_label.csv")
 
     file_to_label_val = {}
-    file_to_label(file_to_label_val,AEOTD_wav, AEOTD_lab + "val_label_man.csv")
-    print("VAL LABEL 1", len(file_to_label_val))
-    file_to_label(file_to_label_val,DLFD, DLFD + "new_val_label.csv")
-    print("VAL LABEL 2", len(file_to_label_val))
-    file_to_label(file_to_label_val,OAC_wav, OAC_lab + "new_val_label.csv")
-    print("VAL LABEL 3", len(file_to_label_val))
+    file_to_label(file_to_label_val,path, path + "val_lab.csv")
+   # file_to_label(file_to_label_val,AEOTD_wav, AEOTD_lab + "val_label_man.csv")
+   # print("VAL LABEL 1", len(file_to_label_val))
+   # file_to_label(file_to_label_val,DLFD, DLFD + "new_val_label.csv")
+   # print("VAL LABEL 2", len(file_to_label_val))
+   # file_to_label(file_to_label_val,OAC_wav, OAC_lab + "new_val_label.csv")
+   # print("VAL LABEL 3", len(file_to_label_val))
 
     #file_to_label = {AEOTD_wav + k: v for k, v in zip(train.file_name.values,train.label.values)}
 
@@ -135,14 +140,6 @@ if __name__=='__main__':
 
 
     # In[]:
-    def extract_layer_output(model, layer_name, input_data):
-
-      layer_output_fn = K.function([model.layers[0].input],[model.get_layer(layer_name).output])
-      layer_output = layer_output_fn([input_data])
-     # layer_output.shape is (num_units, num_timesteps)
-
-      return layer_output[0]
-
     def get_model_mel():
 
         inp = Input(shape=(128, 256, 1))
@@ -182,20 +179,20 @@ if __name__=='__main__':
 
 
     # In[]:
-    dl = Dataloader(file_to_int_val)
-    gradcsv= pd.read_csv(OAC_lab+"new_val_label.csv")
-    T = []
-    L = []
-    for i in range(0,10):
-        if gradcsv.label.values[i] == "noise":
-            L.append(0)
-        else:
-            L.append(1)
-        x = dl.load_audio_file(OAC_wav+gradcsv.file_name.values[i])
-        T.append(x)
-    train_files = np.array(T)[:,:, :, np.newaxis]
+ #   dl = Dataloader(file_to_int_val)
+ #   gradcsv= pd.read_csv(OAC_lab+"new_val_label.csv")
+ #   T = []
+ #   L = []
+ #   for i in range(0,10):
+ #       if gradcsv.label.values[i] == "noise":
+ #           L.append(0)
+ #       else:
+ #           L.append(1)
+ #       x = dl.load_audio_file(OAC_wav+gradcsv.file_name.values[i])
+ #       T.append(x)
+ #   train_files = np.array(T)[:,:, :, np.newaxis]
 
-    my_debug_weights = MyDebugWeights(train_files, L, WEIGHTS_CSV, GRADIENTS_CSV)
+ #   my_debug_weights = MyDebugWeights(train_files, L, WEIGHTS_CSV, GRADIENTS_CSV)
 
     # In[]:
     training_generator = Train_Generator(tr_files, file_to_int_train,augment=True,batch_size=batch_size)
@@ -204,7 +201,7 @@ if __name__=='__main__':
     reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5,mode='max',
                               patience=4, min_delta=1e-3)
 
-    tb = TensorBoard(log_dir='./Graph/{}'.format(ID), histogram_freq=0, write_graph=True, write_images=True)
+    #tb = TensorBoard(log_dir='./Graph/{}'.format(ID), histogram_freq=0, write_graph=True, write_images=True)
 
     earlystop = EarlyStopping(monitor='val_acc', patience=10, mode='max')
     mcheckpoint= ModelCheckpoint(BEST_MODEL,monitor='val_acc',save_best_only=True,mode='max')
@@ -213,7 +210,7 @@ if __name__=='__main__':
     H = model.fit_generator(generator=training_generator, epochs=epochs, steps_per_epoch=len(tr_files) // batch_size,
                             validation_data=validation_generator, validation_steps=len(val_files) // batch_size,use_multiprocessing=False,
                             workers=multiprocessing.cpu_count(),verbose=1,
-                            callbacks=[tb,earlystop,mcheckpoint,my_debug_weights,reduce_lr])
+                            callbacks=[mcheckpoint,reduce_lr])
     stop = timeit.default_timer()
     print('Time: ', stop - start)
 

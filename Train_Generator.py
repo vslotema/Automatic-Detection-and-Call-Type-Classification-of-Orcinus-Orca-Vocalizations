@@ -1,14 +1,13 @@
-import threading
 import keras
-import numpy as np
 import librosa
+
 from Augment import *
 from random import shuffle
 from Tests import *
 import math
 
-
 class Dataloader():
+    compr = "linear" #either linear or mel
     n_mels = 256
     sample_r = 44100
     coef = 0.98
@@ -19,14 +18,13 @@ class Dataloader():
     fmin = 500
     fmax = 10000
     Time = 128
-    bins = 256
     min_level_db = -100
     ref_level_db = 20
 
     def __init__(self, file_to_int,augment=False):
         self.file_to_int = file_to_int
         self.Aug = augment
-
+        self.window = np.hanning(self.n_fft)
 
     def chunker(self,seq, size):
         x = []
@@ -34,40 +32,58 @@ class Dataloader():
             x.append(seq[pos:pos + size])
         return x
 
-    def augmentation(self,mels):
-        mels = randomAmplitude(mels)
-        mels = randomPitchShift(mels)
-        mels = randomTimeStretch(mels)
-        return mels
-
+    def augmentation(self,spec):
+        spec = randomAmplitude(spec)
+        spec = randomPitchShift(spec)
+        spec = randomTimeStretch(spec)
+        return spec
 
     def load_audio_file(self, file_path):
 
-        x, sr = librosa.core.load(file_path, sr=44100, mono=True)  # , sr=16000
-        x = librosa.effects.preemphasis(x, coef=0.98)
-        if self.file_to_int.get(file_path) == 0:
-               x = addNoise(x)
-
-
-        data = self.preprocess_audio_mel_T(x)
+        y, sr = librosa.core.load(file_path, sr=44100, mono=True)
+        y = y[np.newaxis,:]
+        y = np.concatenate((np.expand_dims(y[:,0],-1),y[:,1:] - self.coef * y[:,:-1]), -1)
+        #Noise = False
+        #if self.file_to_int.get(file_path) == 0:
+        #       Noise = True
+        data = self.preprocess_audio(np.squeeze(y,0))
         return data
 
-    def preprocess_audio_mel_T(self, audio):
+    def spectrogram(self,y):
+        spec = librosa.core.stft(y, n_fft=4096, center=False, hop_length=441,window='hann')
+        div = math.sqrt(np.power(self.window,2).sum())
+        spec /= div
+        return np.power(spec,2)
+
+    def preprocess_audio(self, y):
+
+        spec = self.spectrogram(y)
 
         if self.Aug:
-            center = False
+            spec = self.augmentation(spec)
+
+        if self.compr == "linear":
+            spec = self.Interpolate(spec)
         else:
-            center = True
-        mels = librosa.feature.melspectrogram(audio, n_fft=self.n_fft, hop_length=self.hop_length, sr=self.sample_r,
-                                              fmin=self.fmin, fmax=self.fmax, n_mels=self.bins,center=center)
-        if self.Aug:
-            mels = self.augmentation(mels)
+            spec = librosa.feature.melspectrogram(S=spec, n_fft=self.n_fft, hop_length=self.hop_length, sr=self.sample_r,
+                                              fmin=self.fmin, fmax=self.fmax, n_mels=self.n_mels,center=self.center)
 
-        mel_db = librosa.power_to_db(mels)
-        mel_db = np.clip((mel_db - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
-        mel_db = paddingorsampling(mel_db, self.Time,self.Aug)
+        spec = librosa.power_to_db(abs(spec))
+        spec = np.clip((spec - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
+        spec = paddingorsampling(spec, self.Time,self.Aug)
 
-        return mel_db.T
+        return spec.T
+
+    def Interpolate(self,spec):
+
+        if self.sample_r is not None and self.n_fft is not None:
+            min_bin = int(max(0, math.floor(self.n_fft * self.fmin / self.sample_r)))
+            max_bin = int(min(self.n_fft - 1, math.ceil(self.n_fft * self.fmax / self.sample_r)))
+            spec = spec[min_bin:max_bin,:]
+        spec = nearest(spec,self.n_mels,spec.shape[1])
+        return spec
+
+
 
 class Train_Generator(keras.utils.Sequence):
 
@@ -78,19 +94,14 @@ class Train_Generator(keras.utils.Sequence):
         self.test_indexes = np.arange(int(np.ceil(len(list_files)//batch_size))+1)
         self.data = list_files
         self.batch_size = batch_size
-        #self.lock = threading.Lock()
         self.file_to_int = file_to_int
         self.dl = Dataloader(file_to_int,augment)
-       # self.on_epoch_end()
 
     def __len__(self):
         return int(np.ceil(len(self.data) / float(self.batch_size)))
 
     def __getitem__(self, index):
-        #self.lock.acquire()
-        #try:
-           # curr = "THREAD {}".format(threading.current_thread().getName()) + " INDEX {}".format(str(index))
-           # print(curr)
+
         self.test_index_set.add(index)
         self.test_index_list.append(index)
         batch_files = self.data[index * self.batch_size:(index + 1) * self.batch_size]
@@ -99,14 +110,7 @@ class Train_Generator(keras.utils.Sequence):
         batch_labels = [self.file_to_int[fpath] for fpath in batch_files]
         batch_labels = np.array(batch_labels)
 
-        #finally:
-        #    self.lock.release()
         return batch_data, batch_labels
-
-    # def __next__(self):
-
-    #    batch_data, batch_labels = self.__getitem__(self.i)
-    #   return batch_data, batch_labels
 
     def on_epoch_end(self):
 

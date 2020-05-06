@@ -1,13 +1,25 @@
-import librosa
-import numpy as np
-from PIL import Image
-import math
-# Intensity Augmentation
-def flipsizes(size, left, right):
-    size[0] = left
-    size[1] = right
-    return size
 
+import numpy as np
+import math
+
+def nearest(spec,rowsize,colsize):
+    ratio_row = spec.shape[0]/rowsize
+    ratio_col = spec.shape[1]/colsize
+    pos_R = np.empty([rowsize])
+    pos_W = np.empty([colsize])
+    for i in range(len(pos_R)):
+        pos_R[i] = int(i*ratio_row)
+
+    for i in range(len(pos_W)):
+        pos_W[i] = int(i*ratio_col)
+
+    new = np.empty([rowsize,colsize],dtype='complex')
+
+    for i in range(rowsize):
+        for j in range(colsize):
+            new[i,j] = spec[int(pos_R[i]), int(pos_W[j])]
+
+    return new
 
 def scale(spec, factor, dim):
     in_dim = spec.ndim
@@ -17,13 +29,12 @@ def scale(spec, factor, dim):
                          )
     size = list(spec.shape)
     size[dim] = int(np.round(size[dim] * factor))
-    size = flipsizes(size, size[1], size[0])
-    spec = np.array(Image.fromarray(spec).resize(size, resample=Image.NEAREST))
+    spec = nearest(spec,size[0],size[1])
     return spec
 
 
 def randomTimeStretch(spec):
-    factor = 2 ** np.random.uniform(low=-1, high=1)
+    factor = 2 ** np.random.uniform(low=-1., high=1.)
     scaled = scale(spec, factor, 1)
 
     if spec.shape[0] != scaled.shape[0]:
@@ -52,7 +63,7 @@ def randomPitchShift(spec):
     return out
 
 def randomAmplitude(spec):
-    dyn_change = np.random.randint(low=-6, high=3)
+    dyn_change = np.random.randint(low=-6., high=3.)
     spec = spec * (10 ** (dyn_change / 10))
     return spec
 
@@ -77,16 +88,16 @@ def padding(spect,sampler, seq_length=None, dim = 1):
     end = start + sample_length                                     # random end
     shape = list(spect.shape)                                       # returns a list with similar shape to spect
     shape[1] = seq_length
-    padded_spect = np.zeros(shape,dtype='float')
+    padded_spect = np.zeros(shape,dtype='long')
 
     if dim == 0:
-        padded_spect[start:end] = spect.real
+        padded_spect[start:end] = spect
     elif dim == 1:
-        padded_spect[:,start:end] = spect.real
+        padded_spect[:,start:end] = spect
     elif dim == 2:
-        padded_spect[:,:, start:end] = spect.real
+        padded_spect[:,:, start:end] = spect
     elif dim == 3:
-        padded_spect[:,:,:,start:end] = spect.real
+        padded_spect[:,:,:,start:end] = spect
     return padded_spect
 
 def sampling(spect,sampler,seq_length=None, dim =1):
@@ -102,5 +113,5 @@ def sampling(spect,sampler,seq_length=None, dim =1):
 def addNoise(AudioArr,low=-3,high=12):
     y_noise = AudioArr.copy()
     noise_amp = 0.005*np.random.uniform(low=low,high=high)*np.amax(y_noise)
-    y_noise = y_noise.astype('float64') + noise_amp * np.random.normal(size=y_noise.shape[0])
+    y_noise = y_noise.astype('complex') + noise_amp * np.random.normal(size=y_noise.shape[0])
     return y_noise
