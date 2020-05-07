@@ -7,7 +7,7 @@ from Tests import *
 import math
 
 class Dataloader():
-    compr = "linear" #either linear or mel
+
     n_mels = 256
     sample_r = 44100
     coef = 0.98
@@ -21,10 +21,11 @@ class Dataloader():
     min_level_db = -100
     ref_level_db = 20
 
-    def __init__(self, file_to_int,augment=False):
+    def __init__(self, file_to_int,augment=False,freq_compress='linear'):
         self.file_to_int = file_to_int
         self.Aug = augment
         self.window = np.hanning(self.n_fft)
+        self.freq_compress = freq_compress
 
     def chunker(self,seq, size):
         x = []
@@ -62,7 +63,7 @@ class Dataloader():
         if self.Aug:
             spec = self.augmentation(spec)
 
-        if self.compr == "linear":
+        if self.freq_compress == "linear":
             spec = self.Interpolate(spec)
         else:
             spec = librosa.feature.melspectrogram(S=spec, n_fft=self.n_fft, hop_length=self.hop_length, sr=self.sample_r,
@@ -87,23 +88,19 @@ class Dataloader():
 
 class Train_Generator(keras.utils.Sequence):
 
-    def __init__(self, list_files, file_to_int, augment=False, batch_size=32):
-        self.test = SimpleTest()
-        self.test_index_set = set()
-        self.test_index_list = []
-        self.test_indexes = np.arange(int(np.ceil(len(list_files)//batch_size))+1)
+    def __init__(self, list_files, file_to_int,freq_compress='linear', augment=False, batch_size=32):
         self.data = list_files
         self.batch_size = batch_size
         self.file_to_int = file_to_int
-        self.dl = Dataloader(file_to_int,augment)
+        self.dl = Dataloader(file_to_int,augment,freq_compress=freq_compress)
 
     def __len__(self):
         return int(np.ceil(len(self.data) / float(self.batch_size)))
 
     def __getitem__(self, index):
 
-        self.test_index_set.add(index)
-        self.test_index_list.append(index)
+        #self.test_index_set.add(index)
+        #self.test_index_list.append(index)
         batch_files = self.data[index * self.batch_size:(index + 1) * self.batch_size]
         batch_data = [self.dl.load_audio_file(fpath) for fpath in batch_files]
         batch_data = np.array(batch_data)[:, :, :, np.newaxis]
@@ -114,7 +111,7 @@ class Train_Generator(keras.utils.Sequence):
 
     def on_epoch_end(self):
 
-        self.test.test_all_indexes(self.test_index_set,self.test_index_list,self.test_indexes)
+        #self.test.test_all_indexes(self.test_index_set,self.test_index_list,self.test_indexes)
         shuffle(self.data)
-        self.test_index_list.clear()
-        self.test_index_set.clear()
+        #self.test_index_list.clear()
+        #self.test_index_set.clear()
