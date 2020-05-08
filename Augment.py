@@ -2,6 +2,15 @@
 import numpy as np
 import math
 
+
+def nn_interpolate(spec,new_size):
+    old_size = spec.shape
+    row_ratio, col_ratio = np.array(new_size)/np.array(old_size)
+    row_idx = (np.floor(range(0,int(old_size[0]*row_ratio))/row_ratio)).astype(int)
+    col_idx = (np.floor(range(0,int(old_size[1]*col_ratio))/col_ratio)).astype(int)
+    final_matrix = spec[row_idx,:][:,col_idx]
+    return final_matrix
+
 def nearest(spec,rowsize,colsize):
     ratio_row = spec.shape[0]/rowsize
     ratio_col = spec.shape[1]/colsize
@@ -29,7 +38,7 @@ def scale(spec, factor, dim):
                          )
     size = list(spec.shape)
     size[dim] = int(np.round(size[dim] * factor))
-    spec = nearest(spec,size[0],size[1])
+    spec = nn_interpolate(spec,size)
     return spec
 
 

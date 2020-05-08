@@ -81,7 +81,7 @@ class Dataloader():
             min_bin = int(max(0, math.floor(self.n_fft * self.fmin / self.sample_r)))
             max_bin = int(min(self.n_fft - 1, math.ceil(self.n_fft * self.fmax / self.sample_r)))
             spec = spec[min_bin:max_bin,:]
-        spec = nearest(spec,self.n_mels,spec.shape[1])
+        spec = nn_interpolate(spec,[self.n_mels,spec.shape[1]])
         return spec
 
 
