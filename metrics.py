@@ -5,9 +5,12 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, roc_curve,roc_auc_score, accuracy_score
 import seaborn as sns
 import matplotlib.pyplot as plt
+import argparse
 
-ID = "18-47-55"
-path = "2020-05-04_{}\\".format(ID)
+ap = argparse.ArgumentParser()
+ap.add_argument("--res-dir",type=str, help="directory of model results")
+ARGS = ap.parse_args()
+path = ARGS.res_dir
 
 results = pd.read_csv(path + 'res_test.csv')
 f= open(path + "scores.txt","w+")
@@ -51,7 +54,12 @@ sns.lineplot([0,1], [0,1], linestyle='--')
 sns.lineplot(fpr,tpr,marker='.')
 plt.show()
 fig.savefig(path + "roc_curve.png")
-auc_score = roc_auc_score(results.label.values,results.pred_score.values)
+auc_score = 0
+try:
+    auc_score = roc_auc_score(results.label.values,results.pred_score.values)
+except ValueError:
+    pass
+
 print('AUC: {:.3f}'.format(auc_score*100))
 f.write('AUC: {:.3f}'.format(auc_score*100))
 

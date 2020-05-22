@@ -11,25 +11,6 @@ def nn_interpolate(spec,new_size):
     final_matrix = spec[row_idx,:][:,col_idx]
     return final_matrix
 
-def nearest(spec,rowsize,colsize):
-    ratio_row = spec.shape[0]/rowsize
-    ratio_col = spec.shape[1]/colsize
-    pos_R = np.empty([rowsize])
-    pos_W = np.empty([colsize])
-    for i in range(len(pos_R)):
-        pos_R[i] = int(i*ratio_row)
-
-    for i in range(len(pos_W)):
-        pos_W[i] = int(i*ratio_col)
-
-    new = np.empty([rowsize,colsize],dtype='complex')
-
-    for i in range(rowsize):
-        for j in range(colsize):
-            new[i,j] = spec[int(pos_R[i]), int(pos_W[j])]
-
-    return new
-
 def scale(spec, factor, dim):
     in_dim = spec.ndim
     if in_dim < 2:
@@ -66,7 +47,7 @@ def randomPitchShift(spec):
     if factor > 1:
         out = scaled[: size[0], :]
     else:
-        out = np.full(size, median, dtype=spec.dtype)
+        out = np.full(size,median, dtype=spec.dtype)
         new_f_bins = int(np.round(size[0] * factor))
         out[0:new_f_bins, :] = scaled
     return out
@@ -97,7 +78,7 @@ def padding(spect,sampler, seq_length=None, dim = 1):
     end = start + sample_length                                     # random end
     shape = list(spect.shape)                                       # returns a list with similar shape to spect
     shape[1] = seq_length
-    padded_spect = np.zeros(shape,dtype='long')
+    padded_spect = np.zeros(shape,dtype=spect.dtype)
 
     if dim == 0:
         padded_spect[start:end] = spect

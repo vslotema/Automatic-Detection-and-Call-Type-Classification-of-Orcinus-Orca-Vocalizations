@@ -3,10 +3,9 @@ import librosa
 
 from Augment import *
 from random import shuffle
-from Tests import *
 import math
 
-class Dataloader():
+class Dataloader(keras.utils.Sequence):
 
     n_mels = 256
     sample_r = 44100
@@ -39,22 +38,24 @@ class Dataloader():
         spec = randomTimeStretch(spec)
         return spec
 
+    def spectrogram(self, y):
+        spec = librosa.core.stft(y, n_fft=4096, center=False, hop_length=441, window='hann')
+        div = math.sqrt(np.power(self.window, 2).sum())
+        spec /= div
+        return np.power(spec, 2)
+
+    def preEmphasize(self,y):
+        y = y[np.newaxis, :]
+        y = np.concatenate((np.expand_dims(y[:, 0], -1), y[:, 1:] - self.coef * y[:, :-1]), -1)
+        return y
+
     def load_audio_file(self, file_path):
 
         y, sr = librosa.core.load(file_path, sr=44100, mono=True)
-        y = y[np.newaxis,:]
-        y = np.concatenate((np.expand_dims(y[:,0],-1),y[:,1:] - self.coef * y[:,:-1]), -1)
-        #Noise = False
-        #if self.file_to_int.get(file_path) == 0:
-        #       Noise = True
+        y = self.preEmphasize(y)
         data = self.preprocess_audio(np.squeeze(y,0))
-        return data
 
-    def spectrogram(self,y):
-        spec = librosa.core.stft(y, n_fft=4096, center=False, hop_length=441,window='hann')
-        div = math.sqrt(np.power(self.window,2).sum())
-        spec /= div
-        return np.power(spec,2)
+        return data
 
     def preprocess_audio(self, y):
 
@@ -88,19 +89,21 @@ class Dataloader():
 
 class Train_Generator(keras.utils.Sequence):
 
-    def __init__(self, list_files, file_to_int,freq_compress='linear', augment=False, batch_size=32):
+    def __init__(self, split, list_files, file_to_int,freq_compress='linear', augment=False, batch_size=32):
+        self.split = split
         self.data = list_files
         self.batch_size = batch_size
         self.file_to_int = file_to_int
         self.dl = Dataloader(file_to_int,augment,freq_compress=freq_compress)
 
     def __len__(self):
-        return int(np.ceil(len(self.data) / float(self.batch_size)))
+        if self.split == "train":
+            return math.floor(len(self.data) / self.batch_size)
+        else:
+            return math.ceil(len(self.data) / float(self.batch_size))
 
     def __getitem__(self, index):
 
-        #self.test_index_set.add(index)
-        #self.test_index_list.append(index)
         batch_files = self.data[index * self.batch_size:(index + 1) * self.batch_size]
         batch_data = [self.dl.load_audio_file(fpath) for fpath in batch_files]
         batch_data = np.array(batch_data)[:, :, :, np.newaxis]
@@ -111,7 +114,4 @@ class Train_Generator(keras.utils.Sequence):
 
     def on_epoch_end(self):
 
-        #self.test.test_all_indexes(self.test_index_set,self.test_index_list,self.test_indexes)
         shuffle(self.data)
-        #self.test_index_list.clear()
-        #self.test_index_set.clear()

@@ -8,11 +8,13 @@ import pandas as pd
 from tqdm import tqdm
 from OrganizeData import *
 import argparse
+import math
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--data-dir",type=str,help="path for training and val files")
 ap.add_argument("--res-dir",type=str, help="directory of model results")
 ap.add_argument("--freq-compress",type=str,default="linear", help="linear or mel compression")
+ap.add_argument("--batch",type=int,default=16,help="determine size of batch")
 ARGS = ap.parse_args()
 
 folder = ARGS.res_dir
@@ -43,7 +45,7 @@ file_to_int = {k: label_to_int[v] for k, v in file_to_label_test.items()}
 
 dl = Dataloader(file_to_int,False,freq_compress=ARGS.freq_compress)
 
-bag = 3
+bag = 1
 
 array_preds = 0
 
@@ -51,7 +53,7 @@ for i in tqdm(range(bag)):
 
     list_preds = []
 
-    for batch_files in tqdm(dl.chunker(test_files, size=16), total=len(list(test_files)) // 16):
+    for batch_files in tqdm(dl.chunker(test_files, size=ARGS.batch), total=math.ceil(len(list(test_files)) // ARGS.batch)):
         batch_data = [dl.load_audio_file(fpath) for fpath in batch_files]
         batch_data = np.array(batch_data)[:, :, :, np.newaxis]
         preds = model.predict(batch_data).tolist()
@@ -61,7 +63,7 @@ for i in tqdm(range(bag)):
     # In[21]:
 
     array_preds += np.array(list_preds) / bag
-
+print("array preds ", array_preds)
 pred_labels = []
 for i in array_preds:
     if i <= 0.5:

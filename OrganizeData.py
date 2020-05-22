@@ -1,13 +1,10 @@
 import pandas as pd
-import os
 import re
+import os
 
 def append_to_list(path_wav, file_csv):
     list_f = []
-    print("*** append_to_list ***")
-    print("file_csv ", file_csv)
     csv = pd.read_csv(file_csv)
-    print("csv ", csv)
     for file in csv.file_name.values:
         list_f.append(path_wav + file)
     return list_f
@@ -25,19 +22,23 @@ def findpathwav(line):
 
 
 def findcsv(tvt,data_dir):
-    print("*** findcsv ***")
-    print("tvt ", tvt)
-    print("data_dir ", data_dir)
+
     files = []
     ftl = {}
+    print("data dir ", data_dir)
     with open(data_dir + tvt,'r') as fp:
         for c in fp:
+            print("c ", c)
             csvpath = data_dir + c.replace("\n","")
-            path_wav = data_dir + findpathwav(csvpath) + "/"
+            if re.findall("/",c):
+                path_wav = data_dir + findpathwav(c) + "/"
+                if os.name == 'nt':
+                    path_wav = data_dir + findpathwav(c) + "\\"
+            else:
+                path_wav = data_dir
+
             files += append_to_list(path_wav,csvpath)
             file_to_label(ftl,path_wav,csvpath)
     fp.close()
-    print("Files {} ".format(tvt),files)
-    print("File_to_label {} ", ftl)
     return files, ftl
 
