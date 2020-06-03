@@ -106,15 +106,16 @@ if __name__ == '__main__':
         for i in list:
             if i not in unique:
                 unique.append(i)
-        return unique
+            if len(unique) == 2:
+                break
+        return sorted(unique)
 
     list_labels = unique(list(file_to_label_train.values()))
     print("Unique Values: ",list_labels)
 
-    n_output = len(list_labels)
-    print("n output ", n_output)
 
     label_to_int = {k: v for v, k in enumerate(list_labels)}
+    print("label to int ", label_to_int)
 
     file_to_int_train = {k: label_to_int[v] for k, v in file_to_label_train.items()}
     file_to_int_val = {k: label_to_int[v] for k, v in file_to_label_val.items()}
@@ -150,9 +151,9 @@ if __name__ == '__main__':
 
     if ARGS.model is None:
         print("[INFO] compiling model...")
-        model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), n_output)
+        model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), 1)
         opt = optimizers.Adam(lr=ARGS.lr, beta_1=0.5, beta_2=0.999, amsgrad=False)
-        model.compile(optimizer=opt, loss="sparse_categorical_crossentropy", metrics=["acc"])
+        model.compile(optimizer=opt, loss="binary_crossentropy", metrics=["acc"])
         model.summary()
     # otherwise, we're using a checkpoint model
     else:

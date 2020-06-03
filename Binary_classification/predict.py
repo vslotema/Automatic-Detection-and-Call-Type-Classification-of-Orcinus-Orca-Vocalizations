@@ -21,19 +21,17 @@ folder = ARGS.res_dir
 
 data_dir = ARGS.data_dir
 test_files, file_to_label_test = findcsv("test",data_dir)
-_, file_to_label_train = findcsv("train",data_dir)
-print("len test files ", len(test_files))
-print("len file_to_label_test ", len(file_to_label_test))
 
 def unique(list):
     unique = []
     for i in list:
         if i not in unique:
             unique.append(i)
-    return unique
+        elif len(unique) == 2:
+            break
+    return sorted(unique)
 
-class_labels = unique(list(file_to_label_train.values()))
-print("class_labels ", class_labels)
+class_labels = unique(list(file_to_label_test.values()))
 
 # Load the json file that contains the model's structure
 f = Path(folder + "model_structure.json")
@@ -47,6 +45,9 @@ model.load_weights(folder + "best_model.h5")
 
 label_to_int = {k: v for v, k in enumerate(class_labels)}
 print('label_to_int ', label_to_int)
+int_to_label = {label_to_int[class_labels[0]]:class_labels[0],label_to_int[class_labels[1]]:class_labels[1]}
+print("int_to_label[0] ",int_to_label.get(0))
+print("int_to_label[1] ",int_to_label.get(1))
 
 file_to_int = {k: label_to_int[v] for k, v in file_to_label_test.items()}
 
@@ -70,22 +71,15 @@ for i in tqdm(range(bag)):
     # In[21]:
 
     array_preds += np.array(list_preds) / bag
-print("len array_preds", len(array_preds))
+print("array preds ", array_preds)
 
 
-pred_1 = []
-pred_1_score = []
-pred_2 = []
-pred_2_score = []
-
+pred_labels = []
 for i in array_preds:
-    idxs = np.argsort(i)[::-1][:2]#get top2 indexes
-    pred_1.append(class_labels[idxs[0]])
-    pred_1_score.append(i[idxs[0]])
-    pred_2.append(class_labels[idxs[1]])
-    pred_2_score.append(i[idxs[1]])
-
-
+    if i <= 0.5:
+        pred_labels.append(int_to_label.get(0))
+    else:
+        pred_labels.append(int_to_label.get(1))
 
 file_name = []
 labels =[]
@@ -95,19 +89,15 @@ for i in test_files:
     labels.append(file_to_label_test[i])
 
 df = pd.DataFrame(file_name, columns=["file_name"])
-print("df len ", len(df))
 df['label'] = labels
-print("pred 1 len ", len(pred_1))
-df['pred_1'] = pred_1
+df['pred_label'] = pred_labels
+df['pred_score'] = array_preds
 
-df['pred_1_score'] = pred_1_score
-df['pred_2'] = pred_2
-df['pred_2_score'] = pred_2_score
 
 df.to_csv(folder + "res_test.csv", index=False)
 
 results = pd.read_csv(folder + "res_test.csv")
 printres="results file: {}".format(results.file_name.values)  + " label: {}".format(results.label.values)
 print(printres)
-print(confusion_matrix(results.label.values, results.pred_1.values))
-print(matthews_corrcoef(results.label.values, results.pred_1.values))
+print(confusion_matrix(results.label.values, results.pred_label.values))
+print(matthews_corrcoef(results.label.values, results.pred_label.values))

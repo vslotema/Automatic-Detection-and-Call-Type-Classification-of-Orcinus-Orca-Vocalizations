@@ -111,7 +111,7 @@ class ResnetBuilder(object):
 
         flatten1 = Flatten()(pool2)
         dense = Dense(units=num_outputs,
-                      activation="softmax")(flatten1)
+                      activation="sigmoid")(flatten1)
 
         model = Model(inputs=input, outputs=dense)
         return model

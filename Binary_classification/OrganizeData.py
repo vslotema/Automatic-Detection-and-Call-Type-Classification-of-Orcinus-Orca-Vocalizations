@@ -7,14 +7,12 @@ def append_to_list(path_wav, file_csv):
     list_f = []
     csv = pd.read_csv(file_csv)
     for file in csv.file_name.values:
-        if file not in list_f:
-            list_f.append(path_wav + file)
+        list_f.append(path_wav + file)
     return list_f
 
 
-def file_to_label(files,wav_path, csv_path):
+def file_to_label(file_to_label, wav_path, csv_path):
     csv = pd.read_csv(csv_path)
-    file_to_label = {}
     file_to_label.update({wav_path + k: v for k, v in zip(csv.file_name.values, csv.label.values)})
     return file_to_label
 
@@ -31,7 +29,7 @@ def findpathwav(line):
 
 def findcsv(tvt, data_dir):
     files = []
-
+    ftl = {}
     print("data dir ", data_dir)
     with open(data_dir + tvt, 'r') as fp:
         for c in fp:
@@ -43,6 +41,6 @@ def findcsv(tvt, data_dir):
                 path_wav = data_dir
 
             files += append_to_list(path_wav, csvpath)
-            ftl = file_to_label(files,path_wav, csvpath)
+            file_to_label(ftl, path_wav, csvpath)
     fp.close()
     return files, ftl
