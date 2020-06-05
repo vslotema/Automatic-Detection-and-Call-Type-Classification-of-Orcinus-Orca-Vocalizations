@@ -21,17 +21,7 @@ folder = ARGS.res_dir
 
 data_dir = ARGS.data_dir
 test_files, file_to_label_test = findcsv("test",data_dir)
-
-def unique(list):
-    unique = []
-    for i in list:
-        if i not in unique:
-            unique.append(i)
-        elif len(unique) == 2:
-            break
-    return sorted(unique)
-
-class_labels = unique(list(file_to_label_test.values()))
+class_labels = getUniqueLabels(data_dir)
 
 # Load the json file that contains the model's structure
 f = Path(folder + "model_structure.json")

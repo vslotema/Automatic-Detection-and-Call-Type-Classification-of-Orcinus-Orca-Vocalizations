@@ -9,6 +9,7 @@ import argparse
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--res-dir",type=str, help="directory of model results")
+ap.add_argument("--data-dir",type=str, help="directory of the data's csv files")
 ap.add_argument("--pos-label",type=str,default ="orca",help = "decide on the positive label")
 ARGS = ap.parse_args()
 path = ARGS.res_dir
@@ -17,14 +18,7 @@ results = pd.read_csv(path + 'res_test.csv')
 f= open(path + "scores.txt","w+")
 print(results)
 
-def unique(list):
-    unique = []
-    for i in list:
-        if i not in unique:
-            unique.append(i)
-    return sorted(unique)
-
-class_labels = unique(list(results.label.values))
+class_labels = getUniqueLabels(ARGS.data_dir)
 print(class_labels)
 
 ################## CONFUSION MATRIX

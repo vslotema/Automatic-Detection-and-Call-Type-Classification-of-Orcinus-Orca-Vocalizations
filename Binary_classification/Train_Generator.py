@@ -26,40 +26,16 @@ class Dataloader(keras.utils.Sequence):
         self.window = np.hanning(self.n_fft)
         self.freq_compress = freq_compress
 
-    def chunker(self,seq, size):
-        x = []
-        for pos in range(0,len(seq),size):
-            x.append(seq[pos:pos + size])
-        return x
-
-    def augmentation(self,spec):
-        spec = randomAmplitude(spec)
-        spec = randomPitchShift(spec)
-        spec = randomTimeStretch(spec)
-        return spec
-
-    def spectrogram(self, y):
-        n_frames = 1 + int((len(y) - self.n_fft) / self.hop_length)
-        if n_frames < 1:
-            spec = librosa.core.stft(y, n_fft=1024, center=False, hop_length=self.hop_length, window='hann')
-        else:
-            spec = librosa.core.stft(y, n_fft=self.n_fft, center=False, hop_length=self.hop_length, window='hann')
-        div = math.sqrt(np.power(self.window, 2).sum())
-        spec /= div
-        return np.power(spec, 2)
+    def load_audio_file(self, file_path):
+        y, sr = librosa.core.load(file_path, sr=44100, mono=True)
+        y = self.preEmphasize(y)
+        data = self.preprocess_audio(np.squeeze(y,0))
+        return data
 
     def preEmphasize(self,y):
         y = y[np.newaxis, :]
         y = np.concatenate((np.expand_dims(y[:, 0], -1), y[:, 1:] - self.coef * y[:, :-1]), -1)
         return y
-
-    def load_audio_file(self, file_path):
-
-        y, sr = librosa.core.load(file_path, sr=44100, mono=True)
-        y = self.preEmphasize(y)
-        data = self.preprocess_audio(np.squeeze(y,0))
-
-        return data
 
     def preprocess_audio(self, y):
 
@@ -80,6 +56,18 @@ class Dataloader(keras.utils.Sequence):
 
         return spec.T
 
+    def spectrogram(self, y):
+        spec = librosa.core.stft(y, n_fft=self.n_fft, center=False, hop_length=self.hop_length, window='hann')
+        div = math.sqrt(np.power(self.window, 2).sum())
+        spec /= div
+        return np.power(spec, 2)
+
+    def augmentation(self,spec):
+        spec = randomAmplitude(spec)
+        spec = randomPitchShift(spec)
+        spec = randomTimeStretch(spec)
+        return spec
+
     def Interpolate(self,spec):
 
         if self.sample_r is not None and self.n_fft is not None:
@@ -89,7 +77,11 @@ class Dataloader(keras.utils.Sequence):
         spec = nn_interpolate(spec,[self.n_mels,spec.shape[1]])
         return spec
 
-
+    def chunker(self,seq, size):
+        x = []
+        for pos in range(0,len(seq),size):
+            x.append(seq[pos:pos + size])
+        return x
 
 class Train_Generator(keras.utils.Sequence):
 

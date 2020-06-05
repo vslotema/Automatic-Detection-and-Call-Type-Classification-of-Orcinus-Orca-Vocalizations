@@ -101,16 +101,7 @@ if __name__ == '__main__':
     val_files, file_to_label_val = findcsv("val", data_dir)
     print("len val ", len(val_files))
 
-    def unique(list):
-        unique = []
-        for i in list:
-            if i not in unique:
-                unique.append(i)
-            if len(unique) == 2:
-                break
-        return sorted(unique)
-
-    list_labels = unique(list(file_to_label_train.values()))
+    list_labels = getUniqueLabels(data_dir)
     print("Unique Values: ",list_labels)
 
 

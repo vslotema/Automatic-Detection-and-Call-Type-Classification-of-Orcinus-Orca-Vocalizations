@@ -14,7 +14,7 @@ import math
 
 ap = argparse.ArgumentParser()
 
-ap.add_argument("--n_threads", type=int, default=4, help="number of working threads")
+ap.add_argument("--n-threads", type=int, default=4, help="number of working threads")
 
 ap.add_argument("--data-dir", type=str,
                 help="path for training and val files")
@@ -101,14 +101,7 @@ if __name__ == '__main__':
     val_files, file_to_label_val = findcsv("val", data_dir)
     print("len val ", len(val_files))
 
-    def unique(list):
-        unique = []
-        for i in list:
-            if i not in unique:
-                unique.append(i)
-        return unique
-
-    list_labels = unique(list(file_to_label_train.values()))
+    list_labels = getUniqueLabels(data_dir)
     print("Unique Values: ",list_labels)
 
     n_output = len(list_labels)

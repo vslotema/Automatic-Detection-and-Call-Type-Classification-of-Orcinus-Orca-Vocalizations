@@ -3,6 +3,7 @@ from pathlib import Path
 from keras.preprocessing import image
 import numpy as np
 from sklearn.metrics import confusion_matrix, matthews_corrcoef, roc_auc_score, roc_curve
+from sklearn.preprocessing import label_binarize
 from Train_Generator import Dataloader
 import pandas as pd
 from tqdm import tqdm
@@ -20,19 +21,13 @@ ARGS = ap.parse_args()
 folder = ARGS.res_dir
 
 data_dir = ARGS.data_dir
+
 test_files, file_to_label_test = findcsv("test",data_dir)
-_, file_to_label_train = findcsv("train",data_dir)
+
 print("len test files ", len(test_files))
 print("len file_to_label_test ", len(file_to_label_test))
 
-def unique(list):
-    unique = []
-    for i in list:
-        if i not in unique:
-            unique.append(i)
-    return unique
-
-class_labels = unique(list(file_to_label_train.values()))
+class_labels = getUniqueLabels(data_dir)
 print("class_labels ", class_labels)
 
 # Load the json file that contains the model's structure
@@ -72,6 +67,12 @@ for i in tqdm(range(bag)):
     array_preds += np.array(list_preds) / bag
 print("len array_preds", len(array_preds))
 
+classes_to_int= np.arange(len(class_labels))
+dict_scores = {key: [] for key in classes_to_int}
+
+def add_to_dict(scores):
+    for i in range(len(scores)):
+        dict_scores.get(i).append(scores[i])
 
 pred_1 = []
 pred_1_score = []
@@ -79,13 +80,15 @@ pred_2 = []
 pred_2_score = []
 
 for i in array_preds:
+    line = add_to_dict(i)
     idxs = np.argsort(i)[::-1][:2]#get top2 indexes
     pred_1.append(class_labels[idxs[0]])
     pred_1_score.append(i[idxs[0]])
     pred_2.append(class_labels[idxs[1]])
     pred_2_score.append(i[idxs[1]])
 
-
+df_scores = pd.DataFrame(dict_scores)
+df_scores.to_csv(folder + "scores_res.csv",index=False)
 
 file_name = []
 labels =[]
