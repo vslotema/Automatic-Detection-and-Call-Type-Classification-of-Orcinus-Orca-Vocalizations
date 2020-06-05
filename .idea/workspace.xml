@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="5e401bc0-557c-426f-82e8-12a7ae4be5eb" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/Train_Generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/Train_Generator.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExportToHTMLSettings">
+    <option name="OUTPUT_DIRECTORY" value="$PROJECT_DIR$/../Automatic-Detection-and-Dialect-Classifications-of-Killer-Whales\exportToHTML" />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="Automatic-Detection-and-Dialect-Classifications-of-Killer-Whales" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="JupyterTrust" id="309da1fd-1a82-4a7d-82e7-a1c6b91a70d2" />
+  <component name="ProjectId" id="1YNjKSFto6QorOb5lmOxFx4Nbbo" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../ORCA-SPOT/orca_spot" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+  </component>
+  <component name="RunManager" selected="Python.Pipeline">
+    <configuration name="CNN" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Automatic-Detection-and-Dialect-Classifications-of-Killer-Whales" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/CNN.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="DataGenerator" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Automatic-Detection-and-Dialect-Classifications-of-Killer-Whales" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Data" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Data/DataGenerator.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Pipeline" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Automatic-Detection-and-Dialect-Classifications-of-Killer-Whales" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Pipeline.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="Automatic-Detection-and-Dialect-Classifications-of-Killer-Whales" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="cat_pip" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Automatic-Detection-and-Dialect-Classifications-of-Killer-Whales" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/cat_pip.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="subtract_wav" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Automatic-Detection-and-Dialect-Classifications-of-Killer-Whales" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../subtract_wav.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.Pipeline" />
+        <item itemvalue="Python.subtract_wav" />
+        <item itemvalue="Python.cat_pip" />
+        <item itemvalue="Python.CNN" />
+        <item itemvalue="Python.DataGenerator" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5e401bc0-557c-426f-82e8-12a7ae4be5eb" name="Default Changelist" comment="" />
+      <created>1582789881981</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1582789881981</updated>
+      <workItem from="1582789894476" duration="1770000" />
+      <workItem from="1582806876474" duration="19325000" />
+      <workItem from="1582878612578" duration="22491000" />
+      <workItem from="1582966311267" duration="11042000" />
+      <workItem from="1583220786297" duration="7000" />
+      <workItem from="1583783312826" duration="363000" />
+      <workItem from="1583828060485" duration="1093000" />
+      <workItem from="1583830744713" duration="646000" />
+      <workItem from="1585553954222" duration="1956000" />
+      <workItem from="1585569558931" duration="3735000" />
+      <workItem from="1585912783156" duration="5000" />
+      <workItem from="1586005166083" duration="1040000" />
+      <workItem from="1586246388808" duration="12289000" />
+      <workItem from="1586440231345" duration="45000" />
+      <workItem from="1586518825555" duration="1193000" />
+      <workItem from="1586769036920" duration="627000" />
+      <workItem from="1586844977079" duration="41000" />
+      <workItem from="1586856566955" duration="552000" />
+      <workItem from="1586857776721" duration="631000" />
+      <workItem from="1587399596294" duration="1228000" />
+      <workItem from="1587448204062" duration="35000" />
+      <workItem from="1587732482204" duration="1375000" />
+      <workItem from="1588173294440" duration="3331000" />
+      <workItem from="1588228934435" duration="20703000" />
+      <workItem from="1588318024567" duration="2125000" />
+      <workItem from="1588325917002" duration="19000" />
+      <workItem from="1588599263728" duration="930000" />
+      <workItem from="1588690606075" duration="164000" />
+      <workItem from="1588765199420" duration="1794000" />
+      <workItem from="1588776905273" duration="5964000" />
+      <workItem from="1588827860052" duration="23959000" />
+      <workItem from="1588862620503" duration="416000" />
+      <workItem from="1588881462203" duration="216000" />
+      <workItem from="1588924604566" duration="3230000" />
+      <workItem from="1588961611476" duration="2258000" />
+      <workItem from="1589036811256" duration="4866000" />
+      <workItem from="1589116234437" duration="1876000" />
+      <workItem from="1589183597135" duration="1384000" />
+      <workItem from="1589208096031" duration="1562000" />
+      <workItem from="1589265709755" duration="2555000" />
+      <workItem from="1589282952154" duration="13724000" />
+      <workItem from="1589353877044" duration="617000" />
+      <workItem from="1589434452363" duration="31918000" />
+      <workItem from="1589523603070" duration="23459000" />
+      <workItem from="1589613650549" duration="3106000" />
+      <workItem from="1589695535842" duration="3591000" />
+      <workItem from="1589785424340" duration="8429000" />
+      <workItem from="1589956983459" duration="8987000" />
+      <workItem from="1590124050451" duration="5864000" />
+      <workItem from="1590318512220" duration="9660000" />
+      <workItem from="1590346385127" duration="36000" />
+      <workItem from="1590387476978" duration="1761000" />
+      <workItem from="1590568904318" duration="82000" />
+      <workItem from="1590588157023" duration="210000" />
+      <workItem from="1590730182772" duration="1447000" />
+      <workItem from="1590823522833" duration="1158000" />
+      <workItem from="1591207051978" duration="1727000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="499" y="317" key="#com.intellij.ide.actions.ChooseComponentsToExportDialog" timestamp="1589283838610">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state x="499" y="317" key="#com.intellij.ide.actions.ChooseComponentsToExportDialog/0.0.1500.960@0.0.1500.960" timestamp="1589283838610" />
+    <state x="481" y="227" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1589434996873">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state x="481" y="227" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1500.960/-1920.430.1920.1040@0.0.1500.960" timestamp="1589434996873" />
+    <state x="481" y="227" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1500.960@0.0.1500.960" timestamp="1589268303970" />
+    <state x="532" y="223" key="FileChooserDialogImpl" timestamp="1589978083413">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state x="532" y="223" key="FileChooserDialogImpl/0.0.1500.960@0.0.1500.960" timestamp="1589978083413" />
+    <state width="1458" height="313" key="GridCell.Tab.0.bottom" timestamp="1589289350771">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state width="1458" height="313" key="GridCell.Tab.0.bottom/0.0.1500.960@0.0.1500.960" timestamp="1589289350771" />
+    <state width="1458" height="313" key="GridCell.Tab.0.center" timestamp="1589289350771">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state width="1458" height="313" key="GridCell.Tab.0.center/0.0.1500.960@0.0.1500.960" timestamp="1589289350771" />
+    <state width="1458" height="313" key="GridCell.Tab.0.left" timestamp="1589289350771">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state width="1458" height="313" key="GridCell.Tab.0.left/0.0.1500.960@0.0.1500.960" timestamp="1589289350771" />
+    <state width="1458" height="313" key="GridCell.Tab.0.right" timestamp="1589289350771">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state width="1458" height="313" key="GridCell.Tab.0.right/0.0.1500.960@0.0.1500.960" timestamp="1589289350771" />
+    <state width="1458" height="313" key="GridCell.Tab.1.bottom" timestamp="1589289350772">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state width="1458" height="313" key="GridCell.Tab.1.bottom/0.0.1500.960@0.0.1500.960" timestamp="1589289350772" />
+    <state width="1458" height="313" key="GridCell.Tab.1.center" timestamp="1589289350772">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state width="1458" height="313" key="GridCell.Tab.1.center/0.0.1500.960@0.0.1500.960" timestamp="1589289350772" />
+    <state width="1458" height="313" key="GridCell.Tab.1.left" timestamp="1589289350772">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state width="1458" height="313" key="GridCell.Tab.1.left/0.0.1500.960@0.0.1500.960" timestamp="1589289350772" />
+    <state width="1458" height="313" key="GridCell.Tab.1.right" timestamp="1589289350772">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state width="1458" height="313" key="GridCell.Tab.1.right/0.0.1500.960@0.0.1500.960" timestamp="1589289350772" />
+    <state x="252" y="123" key="SettingsEditor" timestamp="1583830789797">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state x="252" y="123" key="SettingsEditor/0.0.1500.960@0.0.1500.960" timestamp="1583830789797" />
+    <state x="451" y="305" key="com.intellij.ide.util.TipDialog" timestamp="1591207052908">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state x="451" y="305" key="com.intellij.ide.util.TipDialog/0.0.1500.960/-1920.430.1920.1040@0.0.1500.960" timestamp="1589434532337" />
+    <state x="451" y="305" key="com.intellij.ide.util.TipDialog/0.0.1500.960/-1920.525.1920.1040@0.0.1500.960" timestamp="1591207052908" />
+    <state x="451" y="305" key="com.intellij.ide.util.TipDialog/0.0.1500.960@0.0.1500.960" timestamp="1590823523780" />
+    <state x="410" y="136" width="672" height="676" key="search.everywhere.popup" timestamp="1589227527379">
+      <screen x="0" y="0" width="1500" height="960" />
+    </state>
+    <state x="410" y="136" width="672" height="676" key="search.everywhere.popup/0.0.1500.960@0.0.1500.960" timestamp="1589227527379" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Automatic_Detection_and_Dialect_Classifications_of_Killer_Whales$Pipeline.coverage" NAME="Pipeline Coverage Results" MODIFIED="1589288700390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Automatic_Detection_and_Dialect_Classifications_of_Killer_Whales$DataGenerator.coverage" NAME="DataGenerator Coverage Results" MODIFIED="1582823826405" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Data" />
+    <SUITE FILE_PATH="coverage/Automatic_Detection_and_Dialect_Classifications_of_Killer_Whales$CNN.coverage" NAME="CNN Coverage Results" MODIFIED="1582973275279" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>

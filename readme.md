@@ -1,3 +1,6 @@
+Consists of two classifiers, one that handles binary classification and another one multi, both are based on a ResNet18 architecture.
+
+To run:
 e.g. Pipeline:
 python3 Pipeline.py --data-dir /mnt/c/myProjects/THESIS/csv/ORCASPOT_csv/ --res-dir /results/ --model /model.h5 --initial-epoch 7 --freq-compress linear  
 
