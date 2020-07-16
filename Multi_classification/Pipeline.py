@@ -14,7 +14,7 @@ import math
 
 ap = argparse.ArgumentParser()
 
-ap.add_argument("--n_threads", type=int, default=4, help="number of working threads")
+ap.add_argument("--n-threads", type=int, default=4, help="number of working threads")
 
 ap.add_argument("--data-dir", type=str,
                 help="path for training and val files")
@@ -68,11 +68,21 @@ ap.add_argument(
 )
 
 ap.add_argument(
+    "--add_noise",
+    type=bool,
+    nargs='?',
+    const=True,
+    default=False,
+    help="if True, this will add noise to the training samples"
+)
+
+ap.add_argument(
     "--epochs_per_eval",
     type=int,
-    default=2,
+    default=1,
     help="The number of batches to run in between evaluations.",
 )
+
 
 ARGS = ap.parse_args()
 
@@ -104,17 +114,17 @@ if __name__ == '__main__':
     list_labels = getUniqueLabels(data_dir)
     print("Unique Values: ",list_labels)
 
+    n_output = len(list_labels)
+    print("n output ", n_output)
 
     label_to_int = {k: v for v, k in enumerate(list_labels)}
-    print("label to int ", label_to_int)
 
     file_to_int_train = {k: label_to_int[v] for k, v in file_to_label_train.items()}
-    print("ftit ", file_to_int_train)
     file_to_int_val = {k: label_to_int[v] for k, v in file_to_label_val.items()}
 
     training_generator = Train_Generator("train", tr_files, file_to_int_train, freq_compress=ARGS.freq_compress,
                                          augment=True,
-                                         batch_size=ARGS.batch)
+                                         batch_size=ARGS.batch,add_noise=ARGS.add_noise)
     validation_generator = Train_Generator("val", val_files, file_to_int_val, freq_compress=ARGS.freq_compress,
                                            augment=False,
                                            batch_size=ARGS.batch)
@@ -143,9 +153,9 @@ if __name__ == '__main__':
 
     if ARGS.model is None:
         print("[INFO] compiling model...")
-        model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), 1)
+        model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), n_output)
         opt = optimizers.Adam(lr=ARGS.lr, beta_1=0.5, beta_2=0.999, amsgrad=False)
-        model.compile(optimizer=opt, loss="binary_crossentropy", metrics=["acc"])
+        model.compile(optimizer=opt, loss="sparse_categorical_crossentropy", metrics=["acc"])
         model.summary()
     # otherwise, we're using a checkpoint model
     else:

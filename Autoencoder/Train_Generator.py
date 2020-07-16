@@ -22,6 +22,7 @@ class Dataloader(keras.utils.Sequence):
     ref_level_db = 20
 
     def __init__(self,augment=False,freq_compress='linear'):
+        #self.file_to_int = file_to_int
         self.Aug = augment
         self.window = np.hanning(self.n_fft)
         self.freq_compress = freq_compress
@@ -47,9 +48,8 @@ class Dataloader(keras.utils.Sequence):
         if self.freq_compress == "linear":
             spec = self.Interpolate(spec)
         else:
-            #spec = librosa.feature.melspectrogram(S=spec, n_fft=spec.shape[0], hop_length=self.hop_length, sr=self.sample_r,
-                     #                         fmin=self.fmin, fmax=self.fmax, n_mels=self.n_mels,center=self.center)
-            spec = self.MelFrequency(spec)
+            spec = librosa.feature.melspectrogram(S=spec, n_fft=self.n_fft, hop_length=self.hop_length, sr=self.sample_r,
+                                              fmin=self.fmin, fmax=self.fmax, n_mels=self.n_mels,center=self.center)
 
         spec = librosa.power_to_db(abs(spec))
         spec = np.clip((spec - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
@@ -78,44 +78,6 @@ class Dataloader(keras.utils.Sequence):
         spec = nn_interpolate(spec,[self.n_mels,spec.shape[1]])
         return spec
 
-    def MelFrequency(self,spec):
-        n_fft = spec.shape[0]
-        mel = self._melbank(n_fft)
-        spec_m = np.matmul(mel,spec)
-        return spec_m
-
-    def _melbank(self,n_fft):
-        m_min = self._hz2mel(self.fmin)
-        m_max = self._hz2mel(self.fmax)
-
-        m_pts = np.linspace(m_min,m_max,self.n_mels+2)
-        f_pts = self._mel2hz(m_pts)
-
-        bins = np.floor(((n_fft - 1) * 2 + 1) * f_pts / self.sample_r).astype("long")
-
-        fb = np.zeros((self.n_mels, n_fft))
-        for m in range(1, self.n_mels + 1):
-            f_m_minus = bins[m - 1].item()
-            f_m = bins[m].item()
-            f_m_plus = bins[m + 1].item()
-
-            if f_m_minus != f_m:
-                fb[m - 1, f_m_minus:f_m] = (np.arange(f_m_minus, f_m) - f_m_minus).astype("float") / (
-                        f_m - f_m_minus
-                )
-            if f_m != f_m_plus:
-                fb[m - 1, f_m:f_m_plus] = (f_m_plus - np.arange(f_m, f_m_plus)).astype("float") / (
-                        f_m_plus - f_m
-                )
-
-        return fb
-
-    def _hz2mel(self,f):
-        return 2595 * np.log10(1 + f / 700)
-
-    def _mel2hz(self,mel):
-        return 700 * (10 ** (mel / 2595) - 1)
-
     def chunker(self,seq, size):
         x = []
         for pos in range(0,len(seq),size):
@@ -124,12 +86,12 @@ class Dataloader(keras.utils.Sequence):
 
 class Train_Generator(keras.utils.Sequence):
 
-    def __init__(self, split, list_files, file_to_int,freq_compress='linear', augment=False, batch_size=32):
+    def __init__(self, split, list_files, freq_compress='linear', augment=False, batch_size=32):
         self.split = split
         self.data = list_files
         self.batch_size = batch_size
-        self.file_to_int = file_to_int
         self.dl = Dataloader(augment,freq_compress=freq_compress)
+        self.dl2= Dataloader(False,freq_compress=freq_compress)
 
     def __len__(self):
         if self.split == "train":
@@ -142,10 +104,9 @@ class Train_Generator(keras.utils.Sequence):
         batch_files = self.data[index * self.batch_size:(index + 1) * self.batch_size]
         batch_data = [self.dl.load_audio_file(fpath) for fpath in batch_files]
         batch_data = np.array(batch_data)[:, :, :, np.newaxis]
-        batch_labels = [self.file_to_int[fpath] for fpath in batch_files]
-        batch_labels = np.array(batch_labels)
-
-        return batch_data, batch_labels
+        #batch_labels = [self.file_to_int[fpath] for fpath in batch_files]
+        #batch_labels = np.array(batch_labels)
+        return batch_data,batch_data
 
     def on_epoch_end(self):
 

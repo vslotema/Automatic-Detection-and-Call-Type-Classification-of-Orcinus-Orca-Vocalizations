@@ -4,17 +4,31 @@ from pathlib import Path
 from Train_Generator import *
 from OrganizeData import *
 import matplotlib.pyplot as plt
+
+
+import tensorflow.compat.v1 as tf
+from keras import Model
 from keras import optimizers, losses, activations, models
+from keras.models import model_from_json
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 import keras.backend as K
-import tensorflow as tf
-import Resnet18
+from keras.layers import (
+    Input,
+    Dense,
+    Flatten,
+    AveragePooling2D
+)
+
+from keras.initializers import he_uniform
 import argparse
 import math
+import numpy as np
+
+import re
 
 ap = argparse.ArgumentParser()
 
-ap.add_argument("--n_threads", type=int, default=4, help="number of working threads")
+ap.add_argument("--n-threads", type=int, default=4, help="number of working threads")
 
 ap.add_argument("--data-dir", type=str,
                 help="path for training and val files")
@@ -25,6 +39,8 @@ ap.add_argument("-m", "--model", type=str, default=None,
                 help="path to model checkpoint to load in case you want to resume a model training from where you left of")
 
 ap.add_argument("--res-dir", type=str, help="path to model results plot,weights,checkpoints etc.")
+
+ap.add_argument("-pm","--pretrained_mod",type=str,help="path for results of this classifier")
 
 ap.add_argument("-ie", "--initial-epoch", type=int, default=0,
                 help="epoch to restart training at")
@@ -70,8 +86,17 @@ ap.add_argument(
 ap.add_argument(
     "--epochs_per_eval",
     type=int,
-    default=2,
+    default=1,
     help="The number of batches to run in between evaluations.",
+)
+
+ap.add_argument(
+    "--add_noise",
+    type=bool,
+    nargs='?',
+    const=True,
+    default=False,
+    help="if True, this will add noise to the training samples"
 )
 
 ARGS = ap.parse_args()
@@ -104,17 +129,17 @@ if __name__ == '__main__':
     list_labels = getUniqueLabels(data_dir)
     print("Unique Values: ",list_labels)
 
+    n_output = len(list_labels)
+    print("n output ", n_output)
 
     label_to_int = {k: v for v, k in enumerate(list_labels)}
-    print("label to int ", label_to_int)
 
     file_to_int_train = {k: label_to_int[v] for k, v in file_to_label_train.items()}
-    print("ftit ", file_to_int_train)
     file_to_int_val = {k: label_to_int[v] for k, v in file_to_label_val.items()}
 
     training_generator = Train_Generator("train", tr_files, file_to_int_train, freq_compress=ARGS.freq_compress,
                                          augment=True,
-                                         batch_size=ARGS.batch)
+                                         batch_size=ARGS.batch,add_noise=ARGS.add_noise)
     validation_generator = Train_Generator("val", val_files, file_to_int_val, freq_compress=ARGS.freq_compress,
                                            augment=False,
                                            batch_size=ARGS.batch)
@@ -143,9 +168,56 @@ if __name__ == '__main__':
 
     if ARGS.model is None:
         print("[INFO] compiling model...")
-        model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), 1)
+        f = Path(ARGS.pretrained_mod + "model_structure.json")
+        model_structure = f.read_text()
+
+        # Recreate the Keras model object from the json data
+        ae = model_from_json(model_structure)
+
+        # Re-load the model's trained weights
+        print("LOOOP")
+        initial_weights = {}
+        for layer in ae.get_layer('encoder').layers[-16:]:
+            if not re.findall("add|activation|batch_normalization",layer.name):
+                print(np.shape(layer.get_weights()))
+                print("layer name: ", layer.name)
+                initial_weights.update({layer.name:layer.get_weights()})
+
+        print(initial_weights.keys())
+
+        #print("initial weights ", initial_weights)
+        ae.load_weights(ARGS.pretrained_mod + "best_model.h5")
+
+        # FREEZE weights until last residual layer
+        print("FREEZE")
+        for layer in ae.get_layer('encoder').layers:
+            if re.findall("batch_normalization",layer.name):
+                layer.trainable = False
+
+        for layer in ae.get_layer('encoder').layers[-16:]:
+            if not re.findall("add|activation|batch_normalization",layer.name):
+                print("layer name: ", layer.name)
+                layer.set_weights(initial_weights.get(layer.name))
+
+        #new_w = np.random.uniform(low=0.0,high=0.1,size=np.shape(last_layer.get_weights()))
+        #new_weights = he_uniform(seed=random.randint(0,1000))(np.shape(last_layer.get_weights()))
+        #print("array ", new_weights.numpy())
+
+        #print("*************\n weights after ", last_layer.get_weights())
+        y = ae.get_layer('encoder').get_output_at(-1)
+
+        block_shape = K.int_shape(y)
+        pool2 = AveragePooling2D(pool_size=(block_shape[1], block_shape[2]),
+                                 strides=(1, 1))(y)
+
+        flatten1 = Flatten()(pool2)
+        dense = Dense(units=n_output,
+                      activation="softmax")(flatten1)
+
+        model = Model(inputs=ae.input, outputs=dense)
+
         opt = optimizers.Adam(lr=ARGS.lr, beta_1=0.5, beta_2=0.999, amsgrad=False)
-        model.compile(optimizer=opt, loss="binary_crossentropy", metrics=["acc"])
+        model.compile(optimizer=opt, loss="sparse_categorical_crossentropy", metrics=["acc"])
         model.summary()
     # otherwise, we're using a checkpoint model
     else:

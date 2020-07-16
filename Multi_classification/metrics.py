@@ -1,3 +1,4 @@
+from OrganizeData import *
 from keras.models import model_from_json
 from pathlib import Path
 import pandas as pd
@@ -62,11 +63,14 @@ fpr = dict()
 tpr = dict()
 roc_auc = dict()
 for i in range(len(class_labels)):
-    print("i:{} yt:{} ys:{}".format(i,y_test[:,i], y_score[:,i]))
+    #print("i:{} yt:{} ys:{}".format(i,y_test[:,i], y_score[:,i]))
     fpr[i], tpr[i], _ = roc_curve(y_test[:,i], y_score[:,i])
-    roc_auc[i] = auc(fpr[i], tpr[i])
+    try:
+        roc_auc[i] = auc(fpr[i], tpr[i])
+    except ValueError:
+        pass
     #print("{} fpr:{} tpr:{} roc_auc:{}".format(int_to_label.get(i),fpr[i],tpr[i],roc_auc[i]))
-
+print("got here")
 # Compute micro-average ROC curve and ROC area
 fpr["micro"], tpr["micro"], _ = roc_curve(np.concatenate(y_test).ravel(), np.concatenate(y_score).ravel())
 roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
@@ -100,7 +104,7 @@ plt.plot(fpr["macro"], tpr["macro"],
                ''.format(roc_auc["macro"]),
          color='navy', linestyle=':', linewidth=4)
 
-colors = cycle(['aqua', 'darkorange', 'cornflowerblue','yellow','red','blue'])
+colors = cycle(['aqua', 'darkorange', 'cornflowerblue','yellow','red','blue',"violet","teal","greenyellow","coral","palegreen","slateblue"])
 for i, color in zip(range(len(class_labels)), colors):
     plt.plot(fpr[i], tpr[i], color=color, lw=lw,
              label='ROC curve of class {0} (area = {1:0.2f})'
@@ -115,9 +119,34 @@ plt.title('ROC multi-class')
 plt.legend(loc="best")
 plt.savefig(path + "roc_curve.png")
 plt.show()
+plt.close()
+
+plt.figure(2)
+plt.plot(fpr["micro"], tpr["micro"],
+         label='micro-average ROC curve (area = {0:0.2f})'
+               ''.format(roc_auc["micro"]),
+         color='deeppink', linestyle=':', linewidth=4)
+
+plt.plot(fpr["macro"], tpr["macro"],
+         label='macro-average ROC curve (area = {0:0.2f})'
+               ''.format(roc_auc["macro"]),
+         color='navy', linestyle=':', linewidth=4)
+
+plt.plot([0, 1], [0, 1], 'k--', lw=lw)
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC multi-class')
+plt.legend(loc="best")
+plt.savefig(path + "macro_micro_roc_curve.png")
+plt.show()
+plt.close()
+
 
 macro_roc_auc_ovo = roc_auc_score(y_test, y_score, multi_class="ovo",
-                                  average="macro")
+                                      average="macro")
+
 weighted_roc_auc_ovo = roc_auc_score(y_test, y_score, multi_class="ovo",
                                      average="weighted")
 macro_roc_auc_ovr = roc_auc_score(y_test, y_score, multi_class="ovr",
