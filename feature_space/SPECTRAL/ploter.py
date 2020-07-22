@@ -25,6 +25,7 @@ def plot(X, y_sp, y_km,path):
     plt.title("Kmeans Clustering")
     # plt.show()
     plt.savefig(path)
+    plt.close()
 
 def plotSortedEigenvalGraphLap(eigenvals, eigenvcts,path):
     eigenvcts_norms = np.apply_along_axis(
@@ -54,7 +55,7 @@ def plotSortedEigenvalGraphLap(eigenvals, eigenvcts,path):
     sns.lineplot(x=range(1, eigenvals_sorted_indices[: index_lim].size + 1), y=eigenvals_sorted[: index_lim], alpha=0.5,
                  ax=ax)
     #ax.axvline(x=3, color=sns_c[3], label='zero eigenvalues', linestyle='--')
-    ax.legend()
+    #ax.legend()
     ax.set(title=f'Sorted Eigenvalues Graph Laplacian (First {index_lim})', xlabel='index', ylabel=r'$\lambda$');
     figx.savefig(path + "Zoomed.PNG")
     plt.close()
@@ -74,6 +75,60 @@ def plotInertia(features,min,max,path):
     sns.lineplot(x=k_candidates, y=inertias, alpha=0.5, ax=ax)
     ax.set(title='Inertia K-Means', ylabel='inertia', xlabel='k');
     fig.savefig(path + "inertia.PNG")
+    plt.close()
+
+def gaps(X,ks,path):
+    k_candidates = ks
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.scatterplot(x=k_candidates, y=X, s=80, ax=ax, color='blue')
+    sns.lineplot(x=k_candidates, y=X, alpha=0.1, ax=ax, color='blue')
+
+    ax.set(title='gap', xlabel='number of clusters K');
+    fig.savefig(path + "G.PNG")
+    plt.close()
+
+def plotGap(ks,Wks,Wkbs,sk,path):
+    k_candidates = ks
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.scatterplot(x=k_candidates, y=Wks, s=80, ax=ax,color='blue')
+    sns.lineplot(x=k_candidates, y=Wks, alpha=0.1, ax=ax, color = 'blue')
+    sns.scatterplot(x=k_candidates, y=Wkbs, s=80, ax=ax, color='red')
+    sns.lineplot(x=k_candidates, y=Wkbs, alpha=0.1, ax=ax, color='red')
+
+    ax.set(title='Wks and Wkbs', xlabel='number of clusters K');
+    fig.savefig(path + "W.PNG")
+    plt.close()
+    print("sk shape ", sk.shape)
+
+    Gap = []
+    for i in range(len(ks)):
+        Gap.append(Wks[i] - Wkbs[i])
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.scatterplot(x=k_candidates, y=Gap, s=80, ax=ax)
+    # sns.scatterplot(x=[k_candidates[3]], y=[inertias[2]], color=sns_c[3], s=150, ax=ax)
+    sns.lineplot(x=k_candidates, y=Gap, alpha=0.1, ax=ax)
+    ax.set(title='Gap Statistic', ylabel='Gap', xlabel='number of clusters K');
+    fig.savefig(path + "Gap.PNG")
+    plt.close()
+    print("sk shape ", sk.shape)
+
+    Gapsk =[]
+    for i in range(len(ks)):
+        if i < len(sk)-1:
+            Gapsk.append((Gap[i]) - (Gap[i+1] - sk[i+1])) # Gap(k) - (Gap(k+1) - Sk+1)
+        else:
+            Gapsk.append(0.0)
+    print("gap ", Gapsk)
+    print("shape ", np.shape(Gapsk))
+    fig, ax = plt.subplots(figsize=(10, 6))
+    plt.bar(k_candidates, Gapsk)
+    # sns.scatterplot(x=[k_candidates[3]], y=[inertias[2]], color=sns_c[3], s=150, ax=ax)
+    #sns.lineplot(x=k_candidates, y=X, alpha=0.5, ax=ax)
+    ax.set(title='Gap Statistic', ylabel='Gap(k) -(Gap(k+1) - Sk+1)', xlabel='number of clusters K');
+    fig.savefig(path + "Gapsk.PNG")
     plt.close()
 
 def func(pct, allvalues):

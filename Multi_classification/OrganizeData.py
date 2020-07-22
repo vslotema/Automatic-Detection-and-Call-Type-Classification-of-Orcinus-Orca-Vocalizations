@@ -12,9 +12,8 @@ def append_to_list(path_wav, file_csv):
     return list_f
 
 
-def file_to_label(files,wav_path, csv_path):
+def file_to_label(file_to_label,wav_path, csv_path):
     csv = pd.read_csv(csv_path)
-    file_to_label = {}
     file_to_label.update({wav_path + k: v for k, v in zip(csv.file_name.values, csv.label.values)})
     return file_to_label
 
@@ -31,10 +30,12 @@ def findpathwav(line):
 
 def findcsv(tvt, data_dir):
     files = []
+    ftl = {}
 
     with open(data_dir + tvt, 'rb') as fp:
         lines = [l.decode('utf8', 'ignore') for l in fp.readlines()]
         for i in lines:
+            print("i ")
             csvpath = data_dir + i.replace("\n","")
             if re.findall("/", i):
                 path_wav = data_dir + findpathwav(i)
@@ -42,7 +43,7 @@ def findcsv(tvt, data_dir):
                 path_wav = data_dir
 
             files += append_to_list(path_wav, csvpath)
-            ftl = file_to_label(files,path_wav, csvpath)
+            ftl = file_to_label(ftl,path_wav, csvpath)
     fp.close()
     return files, ftl
 
@@ -60,7 +61,8 @@ def getUniqueLabels(data_dir):
         with open(data_dir + i, 'rb') as fp:
             lines = [l.decode('utf8', 'ignore') for l in fp.readlines()]
             for i in lines:
-                csvpath = data_dir + i.replace("\n","")
+                i = i.replace("\n","")
+                csvpath = data_dir + i
                 df = pd.read_csv(csvpath)
                 u_labels += df.label.values.tolist()
     u_labels = unique(u_labels)

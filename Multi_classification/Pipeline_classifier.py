@@ -178,7 +178,7 @@ if __name__ == '__main__':
         print("LOOOP")
         initial_weights = {}
         for layer in ae.get_layer('encoder').layers[-16:]:
-            if not re.findall("add|activation|batch_normalization",layer.name):
+            if not re.findall("add|activation",layer.name):
                 print(np.shape(layer.get_weights()))
                 print("layer name: ", layer.name)
                 initial_weights.update({layer.name:layer.get_weights()})
@@ -189,15 +189,17 @@ if __name__ == '__main__':
         ae.load_weights(ARGS.pretrained_mod + "best_model.h5")
 
         # FREEZE weights until last residual layer
-        print("FREEZE")
-        for layer in ae.get_layer('encoder').layers:
-            if re.findall("batch_normalization",layer.name):
-                layer.trainable = False
+        #print("FREEZE")
+        #for layer in ae.get_layer('encoder').layers[:len(ae.get_layer('encoder').layers)-8]:
+         #   if re.findall("batch_normalization",layer.name):
+          #      print(layer.name)
+           #     layer.trainable = False
 
         for layer in ae.get_layer('encoder').layers[-16:]:
-            if not re.findall("add|activation|batch_normalization",layer.name):
+            if not re.findall("add|activation",layer.name):
                 print("layer name: ", layer.name)
                 layer.set_weights(initial_weights.get(layer.name))
+
 
         #new_w = np.random.uniform(low=0.0,high=0.1,size=np.shape(last_layer.get_weights()))
         #new_weights = he_uniform(seed=random.randint(0,1000))(np.shape(last_layer.get_weights()))
@@ -212,7 +214,7 @@ if __name__ == '__main__':
 
         flatten1 = Flatten()(pool2)
         dense = Dense(units=n_output,
-                      activation="softmax")(flatten1)
+                      activation="softmax",use_bias=True,kernel_initializer="he_normal")(flatten1)
 
         model = Model(inputs=ae.input, outputs=dense)
 

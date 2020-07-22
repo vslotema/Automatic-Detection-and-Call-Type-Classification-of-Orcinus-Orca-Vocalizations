@@ -73,11 +73,18 @@ def getID(test_file):
     ID = split[len(split)-1].replace(".wav","")
     return ID
 
-def spec(spec,ID):
+def spec(spec1,spec2,ID):
     fig = plt.Figure()
     canvas = FigureCanvas(fig)
     ax = fig.add_subplot(111)
-    librosa.display.specshow(spec, sr=44100, ax=ax, x_axis='time', y_axis=ARGS.freq_compress)
+    librosa.display.specshow(spec1, sr=44100, ax=ax, x_axis='time', y_axis=ARGS.freq_compress)
+    plt.title("encoded")
+
+    fig = plt.Figure()
+    canvas = FigureCanvas(fig)
+    ax = fig.add_subplot(112)
+    librosa.display.specshow(spec2, sr=44100, ax=ax, x_axis='time', y_axis=ARGS.freq_compress)
+    plt.title("decoded")
     fig.savefig(ID)
     plt.close()
 
@@ -94,81 +101,8 @@ for i in range(0, len(test_files)-1):
     print("original shape ", original.shape)
     recon = np.squeeze(decoded[i],axis=2)
     print("dec shape ", recon.shape)
-    spec(original,folder + ID + "_original.png")
-    spec(recon,folder + ID + "_decoded.png")
+    spec(original,recon,folder + ID)
+    #spec(recon,folder + ID + "_decoded.png")
    # cv2.imwrite(folder +"{}.png".format(ID),output)
 
 
-
-    # if the outputs array is empty, initialize it as the current
-    # side-by-side image display
-    #if outputs is None:
-        #outputs = output
-
-    # otherwise, vertically stack the outputs
-    #else:
-        #outputs = np.vstack([outputs, output])
-    #print("outputs ", outputs)
-
-# save the outputs image to disk
-#cv2.imwrite(folder, outputs)
-
-
-# label_to_int = {k: v for v, k in enumerate(class_labels)}
-# print('label_to_int ', label_to_int)
-# int_to_label = {label_to_int[class_labels[0]]:class_labels[0],label_to_int[class_labels[1]]:class_labels[1]}
-# print("int_to_label[0] ",int_to_label.get(0))
-# print("int_to_label[1] ",int_to_label.get(1))
-#
-# file_to_int = {k: label_to_int[v] for k, v in file_to_label_test.items()}
-#
-# dl = Dataloader(file_to_int,False,freq_compress=ARGS.freq_compress)
-#
-# bag = 1
-#
-# array_preds = 0
-#
-# for i in tqdm(range(bag)):
-#
-#     list_preds = []
-#
-#     for batch_files in tqdm(dl.chunker(test_files, size=ARGS.batch), total=math.ceil(len(list(test_files)) // ARGS.batch)):
-#         batch_data = [dl.load_audio_file(fpath) for fpath in batch_files]
-#         batch_data = np.array(batch_data)[:, :, :, np.newaxis]
-#         preds = model.predict(batch_data).tolist()
-#         #print('preds ', preds)
-#         list_preds += preds
-#
-#     # In[21]:
-#
-#     array_preds += np.array(list_preds) / bag
-# print("array preds ", array_preds)
-#
-#
-# pred_labels = []
-# for i in array_preds:
-#     if i <= 0.5:
-#         pred_labels.append(int_to_label.get(0))
-#     else:
-#         pred_labels.append(int_to_label.get(1))
-#
-# file_name = []
-# labels =[]
-#
-# for i in test_files:
-#     file_name.append(i)
-#     labels.append(file_to_label_test[i])
-#
-# df = pd.DataFrame(file_name, columns=["file_name"])
-# df['label'] = labels
-# df['pred_label'] = pred_labels
-# df['pred_score'] = array_preds
-#
-#
-# df.to_csv(folder + "res_test.csv", index=False)
-#
-# results = pd.read_csv(folder + "res_test.csv")
-# printres="results file: {}".format(results.file_name.values)  + " label: {}".format(results.label.values)
-# print(printres)
-# print(confusion_matrix(results.label.values, results.pred_label.values))
-# print(matthews_corrcoef(results.label.values, results.pred_label.values))

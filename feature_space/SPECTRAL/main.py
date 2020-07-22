@@ -2,10 +2,11 @@ import sys
 sys.path.append("..")
 
 from ploter import *
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, SpectralClustering
 
 from Train_Generator import *
 from OrganizeData import *
+from G import *
 
 import argparse
 import math
@@ -17,14 +18,19 @@ from sklearn.neighbors import kneighbors_graph
 from scipy import sparse
 import pandas as pd
 import os
+import re
 
 
 from keras.models import model_from_json
 from keras.layers import (
     Flatten,
     Dense,
+    AveragePooling2D,
+    MaxPooling2D
 )
 from keras import Model
+import keras.backend as K
+import keras
 
 
 
@@ -61,7 +67,7 @@ ap.add_argument(
     "-nc",
     "--n_clusters",
     type=int,
-    default=12,
+    default=None,
     help="number of clusters"
 )
 
@@ -84,7 +90,6 @@ def getFeatures(files,model):
         batch_data = np.asarray(batch_data)
         labels += [file_to_label[fpath] for fpath in batch_files]
         current_features = model.predict(batch_data)
-        print("current features shape ", current_features.shape)
         if features is None:
             features = current_features
         else:
@@ -97,7 +102,7 @@ def generate_graph_laplacian(df, nn):
     connectivity = kneighbors_graph(X=df, n_neighbors=nn, mode='connectivity')
     adjacency_matrix_s = (1 / 2) * (connectivity + connectivity.T)
     # Graph Laplacian.
-    graph_laplacian_s = sparse.csgraph.laplacian(csgraph=adjacency_matrix_s, normed=False)
+    graph_laplacian_s = sparse.csgraph.laplacian(csgraph=adjacency_matrix_s, normed=True)
     graph_laplacian = graph_laplacian_s.toarray()
     return graph_laplacian
 
@@ -131,7 +136,7 @@ def run_k_means(df, n_clusters):
     cluster = k_means.predict(df)
     return cluster
 
-def SpectralClustering(features,n_clusters):
+def spectralClustering(features,n_clusters):
     graph_laplacian = generate_graph_laplacian(df=features, nn=8)
     eigenvals, eigenvcts = compute_spectrum_graph_laplacian(graph_laplacian)
     proj_df = project_and_transpose(eigenvals, eigenvcts, n_clusters)
@@ -148,20 +153,35 @@ def getModel(folder):
     # Re-load the model's trained weights
     ae.load_weights(folder + "best_model.h5")
 
+   # for layer in ae.get_layer('bottleneck').layers:
+     #   print(layer.name)
+        #print(layer.get_weights())
+
+    #y = ae.layers[-2].output
+
     y = ae.get_layer('encoder').get_output_at(-1)
+    #block_shape = K.int_shape(y)
+    #y = MaxPooling2D(pool_size=(block_shape[1], block_shape[2]),
+     #                        strides=(1, 1))(y)
     y = ae.get_layer('bottleneck').layers[0](y) #input
     y = ae.get_layer('bottleneck').layers[1](y) # Conv (1,1)
     y = ae.get_layer('bottleneck').layers[2](y) # batchnormalization
     y = ae.get_layer('bottleneck').layers[3](y) # Relu
-    print("y shape before flatten ", y.shape)
-
+    #if re.findall("flatten",ae.get_layer('bottleneck').layers[4].name):
+     #   y = ae.get_layer('bottleneck').layers[4](y)
+    #else:
     y = Flatten()(y)
+   # y = Dense(units=12,
+      #               activation="softmax", use_bias=True,kernel_initializer="he_normal")(y)
+    #print("y shape before flatten ", y.shape)
+
+    #y = Flatten()(y)
 
     return Model(inputs=ae.input, outputs=y)
 
 def createdict(c_dict,cluster,lab,n_clusters):
     #print("c dict: {}, cluster: {}, lab: {} ,n_clusters: {}".format(c_dict,cluster,lab,n_clusters))
-    print("cluster ", cluster)
+    #print("cluster ", cluster)
     for c in range(0,n_clusters):
         if cluster == c:
             if cluster not in c_dict.keys():
@@ -177,8 +197,8 @@ def createdict(c_dict,cluster,lab,n_clusters):
 
 def createPiePlots(dict,path):
     for c in dict.keys():
-        print("cluster ", c)
-        print("c keys:{}, values:{} ".format(dict[c].keys(), dict[c].values()))
+        #print("cluster ", c)
+        #print("c keys:{}, values:{} ".format(dict[c].keys(), dict[c].values()))
         plotPieChart(dict[c].keys(), dict[c].values(), path  + str(c) + ".PNG",c)
 
 if __name__ == '__main__':
@@ -186,10 +206,9 @@ if __name__ == '__main__':
 
     # In[2]:
     dir = ARGS.res_dir
-    if not os.path.isdir(dir + "PLOTS/"):
-        os.mkdir(dir + "PLOTS/")
-
-    save = dir + "PLOTS/"
+    if not os.path.exists(dir + ARGS.freq_compress + "_PLOTS/"):
+        os.mkdir(dir + ARGS.freq_compress + "_PLOTS/")
+    save = dir + ARGS.freq_compress + "_PLOTS/"
 
     data_dir = ARGS.data_dir
     files, file_to_label = findcsv("test", data_dir)
@@ -208,20 +227,38 @@ if __name__ == '__main__':
 
     features, labels = getFeatures(files,model)
     print("features shape ", features.shape)
-    n_clusters=ARGS.n_clusters
+    #ks,Wks,Wkbs, sk = gap_statistic(features,1,30)
+    #print("ks ", ks)
+    #print("sk ", sk)
 
-    clusters,eigenvals,eigenvcts = SpectralClustering(features,n_clusters)
+    #plotGap(ks,Wks,Wkbs,sk,save)
+    if ARGS.n_clusters is None:
+        gap = gap(features)
+        gaps(gap, range(1, 30), save)
+        gap = list(gap)
+        n_clusters = gap.index(max(gap))
+    else:
+        n_clusters = ARGS.n_clusters
 
-    plotSortedEigenvalGraphLap(eigenvals, eigenvcts,save)
+    print("Number of clusters ", n_clusters)
 
-    plotInertia(features,1,30,save)
+    #clusters,eigenvals,eigenvcts = SpectralClustering(features,n_clusters)
 
+    #plotSortedEigenvalGraphLap(eigenvals, eigenvcts,save)
+
+    #plotInertia(features,1,30,save)
+    spec = SpectralClustering(n_clusters=n_clusters,n_init=20,affinity='rbf',gamma=0.0001)
+    print("affinity matrix ", spec.affinity_matrix_)
+    clusters = spec.fit_predict(features)
+    print("clusters ", clusters)
+    print("affinity matrix ", spec.affinity_matrix_)
     pure_kmeans = KMeans(n_clusters=n_clusters).fit(features.astype('float64'))
 
-    plot(features, clusters, pure_kmeans.labels_, save + "clusters.PNG")
+    plot(spec.affinity_matrix_, clusters, pure_kmeans.labels_, save + "clusters.PNG")
 
     df = pd.DataFrame(files, columns=["file_name"])
     df['label'] = list(file_to_label.values())
+    df['features'] = list(features)
     df['spectral_c'] = clusters
     df['kmeans_c'] = pure_kmeans.labels_
     df.to_csv(folder + "clusters.csv", index=False)
@@ -232,20 +269,20 @@ if __name__ == '__main__':
     kmeans= {}
     for _,val in enumerate(dfr.values):
         lab = val[1]
-        spec_c = val[2]
-        kmeans_c = val[3]
+        spec_c = val[3]
+        kmeans_c = val[4]
 
         spec = createdict(spec,spec_c,lab,n_clusters)
         kmeans = createdict(kmeans,kmeans_c,lab,n_clusters)
 
-    if not os.path.isdir(dir + "PLOTS/SPEC/"):
-        os.mkdir(dir + "PLOTS/SPEC/")
-    spec_path = dir + "PLOTS/SPEC/"
+    if not os.path.isdir(save + "SPEC/"):
+        os.mkdir(save + "SPEC/")
+    spec_path = save + "SPEC/"
     createPiePlots(spec,spec_path)
 
-    if not os.path.isdir(dir + "PLOTS/KMEANS/"):
-        os.mkdir(dir + "PLOTS/KMEANS/")
-    kmeans_path = dir + "PLOTS/KMEANS/"
+    if not os.path.isdir(save + "KMEANS/"):
+        os.mkdir(save + "KMEANS/")
+    kmeans_path = save + "KMEANS/"
     createPiePlots(kmeans,kmeans_path)
 
 

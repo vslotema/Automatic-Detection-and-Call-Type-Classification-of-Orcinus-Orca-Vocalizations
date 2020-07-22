@@ -139,10 +139,15 @@ if __name__ == '__main__':
 
     # In[2]:
     dir = ARGS.res_dir
-    tsne_save = "{}".format(dir) + "TSNE.PNG"
+    tsne_save = "{}".format(dir) + ARGS.freq_compress + "_TSNE.PNG"
 
     data_dir = ARGS.data_dir
     files, file_to_label = findcsv("test", data_dir)
+    files2, file_to_label2 = findcsv("train", data_dir)
+    files3, file_to_label3 = findcsv("val", data_dir)
+    files = files + files2 + files3
+    file_to_label.update(file_to_label2)
+    file_to_label.update(file_to_label3)
     folder = ARGS.res_dir
 
     #model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), 1)
