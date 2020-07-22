@@ -268,21 +268,16 @@ if __name__ == '__main__':
 
 
         dl = Dataloader(False, freq_compress=ARGS.freq_compress)
-        score = 0.0
-        for batch_files in tqdm(dl.chunker(test_files, size=ARGS.batch),
-                                total=math.ceil(len(list(test_files)) // ARGS.batch)):
-            batch_data = [dl.load_audio_file(fpath) for fpath in batch_files]
-            batch_data = np.array(batch_data)[:, :, :, np.newaxis]
-            batch_labels = [file_to_int_test[fpath] for fpath in batch_files]
-            batch_labels = np.array(batch_labels)
-            loss,acc = model.evaluate(batch_data,batch_labels)
 
-            # print('preds ', preds)
-            score += acc
 
-        score = score / math.ceil(len(test_files) // ARGS.batch)
-        print("score ", score)
-        all_scores.append(score)
+        batch_data = [dl.load_audio_file(fpath) for fpath in test_files]
+        batch_data = np.array(batch_data)[:, :, :, np.newaxis]
+        batch_labels = [file_to_int_test[fpath] for fpath in test_files]
+        batch_labels = np.array(batch_labels)
+        loss,acc = model.evaluate(batch_data,batch_labels)
+
+        print("score ", acc)
+        all_scores.append(acc)
 
         model_structure = model.to_json()  # convert the NN into JSON
         f = Path(MODEL_STRUCTURE_JSON)  # write the JSON data into a text file
