@@ -107,6 +107,29 @@ ap.add_argument(
 ARGS = ap.parse_args()
 
 
+def checkIfAllLables(test_i, files, ftl, labels):
+    print("labels ", labels)
+    labs = []
+    print("labs ", labs)
+    for i in test_i:
+        if ftl.get(files[i]) not in labs:
+            print("test contains label ", ftl.get(files[i]))
+            labs.append(ftl.get(files[i]))
+    if len(labs) == len(labels):
+        print("test contains all labels")
+        return True
+    else:
+        print("test does not contain all labels")
+        return False
+
+
+def containAllLabels(train_i, test_i, files, ftl, labels):
+    temp = np.append(train_i,test_i)
+    while not checkIfAllLables(test_i, files, ftl, labels):
+        print("shuffle")
+        train_i, test_i = train_test_split(temp, test_size=len(test_i))
+    return train_i, test_i
+
 def writeFilestoCSV(ftl, csv):
     print("csv ", csv)
     csv.write("file_name,label\n")
@@ -228,6 +251,7 @@ if __name__ == '__main__':
         LOG = "{}".format(dir) + "{}_log/".format(str(fold))
         fold += 1
 
+        train_i, test_i = containAllLabels(train_i,test_i,files,file_to_label,list_labels)
         train_i,val_i = train_test_split(train_i,test_size=0.186)
 
         tr_files = [files[i] for i in train_i]
