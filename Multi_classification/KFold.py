@@ -224,7 +224,7 @@ if __name__ == '__main__':
         BEST_MODEL = "{}".format(dir) + "{}_best_model.h5".format(str(fold))
         PLOT = "{}".format(dir) + "{}_plot.png".format(str(fold))
         RESULTS_CSV = "{}".format(dir) + "{}_res_test.csv".format(str(fold))
-        WEIGHTS_CSV = "{}".format(dir) + "{}_weights.csv".format(str(fold))
+        SCORES_CSV = "{}".format(dir) + "{}_scores.csv".format(str(fold))
         LOG = "{}".format(dir) + "{}_log/".format(str(fold))
         fold += 1
 
@@ -316,7 +316,7 @@ if __name__ == '__main__':
             pred_2_score.append(i[idxs[1]])
 
         df_scores = pd.DataFrame(dict_scores)
-        df_scores.to_csv(RESULTS_CSV, index=False)
+        df_scores.to_csv(SCORES_CSV, index=False)
 
         file_name = []
         labels = []
@@ -335,7 +335,7 @@ if __name__ == '__main__':
         df['pred_2'] = pred_2
         df['pred_2_score'] = pred_2_score
 
-        df.to_csv(dir + "res_test.csv", index=False)
+        df.to_csv(RESULTS_CSV, index=False)
 
         model_structure = model.to_json()  # convert the NN into JSON
         f = Path(MODEL_STRUCTURE_JSON)  # write the JSON data into a text file
