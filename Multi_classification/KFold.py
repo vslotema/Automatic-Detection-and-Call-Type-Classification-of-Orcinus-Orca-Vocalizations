@@ -387,7 +387,11 @@ if __name__ == '__main__':
         plt.legend(loc="lower left")
         plt.savefig(PLOT)
 
-    acc_scores = open(ARGS.res_dir + "acc_scores.txt","w+")
+    acc_scores = open(ARGS.res_dir + "acc_scores.csv","w+")
+    print("All SCORES {}".format(all_scores))
+    print("MAX SCORE:{} , FOLD:{}".format(max(all_scores),all_scores.index(max(all_scores))))
+    print("AVERAGE SCORE {}".format(statistics.mean(all_scores)))
     acc_scores.write("All SCORES {}".format(all_scores))
     acc_scores.write("MAX SCORE:{} , FOLD:{}".format(max(all_scores),all_scores.index(max(all_scores))))
     acc_scores.write("AVERAGE SCORE {}".format(statistics.mean(all_scores)))
+    acc_scores.close()

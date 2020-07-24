@@ -6,7 +6,8 @@ from OrganizeData import *
 import Resnet18
 import matplotlib.pyplot as plt
 
-import tensorflow.compat.v1 as tf
+
+import keras
 from keras import Model
 from keras import optimizers, losses, activations, models
 from keras.models import model_from_json
@@ -23,6 +24,8 @@ from keras.initializers import he_uniform
 import argparse
 import math
 import numpy as np
+import pandas as pd
+import statistics
 
 import re
 
@@ -40,7 +43,7 @@ ap.add_argument("-m", "--model", type=str, default=None,
 
 ap.add_argument("--res-dir", type=str, help="path to model results plot,weights,checkpoints etc.")
 
-ap.add_argument("-pm", "--pretrained_mod", default=None, type=str, help="path for results of this classifier")
+ap.add_argument("-pm","--pretrained_mod",default=None,type=str,help="path for results of this classifier")
 
 ap.add_argument("-ie", "--initial-epoch", type=int, default=0,
                 help="epoch to restart training at")
@@ -101,8 +104,8 @@ ap.add_argument(
 
 ARGS = ap.parse_args()
 
+def getModel(pm,lr,n_output):
 
-def getModel(pm, lr, n_output):
     if pm is None:
         model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), n_output)
     else:
@@ -115,10 +118,10 @@ def getModel(pm, lr, n_output):
 
         initial_weights = {}
         for layer in ae.get_layer('encoder').layers[-16:]:
-            if not re.findall("add|activation", layer.name):
+            if not re.findall("add|activation",layer.name):
                 print(np.shape(layer.get_weights()))
                 print("layer name: ", layer.name)
-                initial_weights.update({layer.name: layer.get_weights()})
+                initial_weights.update({layer.name:layer.get_weights()})
 
         print(initial_weights.keys())
 
@@ -126,7 +129,7 @@ def getModel(pm, lr, n_output):
         ae.load_weights(ARGS.pretrained_mod + "best_model.h5")
         # Load last residual layer with initial weights
         for layer in ae.get_layer('encoder').layers[-16:]:
-            if not re.findall("add|activation", layer.name):
+            if not re.findall("add|activation",layer.name):
                 print("layer name: ", layer.name)
                 layer.set_weights(initial_weights.get(layer.name))
 
@@ -138,7 +141,7 @@ def getModel(pm, lr, n_output):
 
         flatten1 = Flatten()(pool2)
         dense = Dense(units=n_output,
-                      activation="softmax", use_bias=True, kernel_initializer="he_normal")(flatten1)
+                      activation="softmax",use_bias=True,kernel_initializer="he_normal")(flatten1)
 
         model = Model(inputs=ae.input, outputs=dense)
 
@@ -148,32 +151,20 @@ def getModel(pm, lr, n_output):
     return model
     # otherwise, we're using a checkpoint model
 
-
 # In[2]:
 if __name__ == '__main__':
 
     # In[2]:
-
-    dir = ARGS.res_dir
-
-    HISTORY_CSV = "{}".format(dir) + "history.csv"
-    TEST_FILES_CSV = "{}".format(dir) + "test_files.csv"
-    MODEL_STRUCTURE_JSON = "{}".format(dir) + "model_structure.json"
-    WEIGHTS_CNN = "{}".format(dir) + "weights.h5"
-    BEST_MODEL = "{}".format(dir) + "best_model.h5"
-    PLOT = "{}".format(dir) + "plot.png"
-    RESULTS_CSV = "{}".format(dir) + "results.csv"
-    WEIGHTS_CSV = "{}".format(dir) + "weights.csv"
-    LOG = "{}".format(dir) + "log/"
 
     # In[]:
     print("{} compression".format(ARGS.freq_compress))
     data_dir = ARGS.data_dir
     tr_files, file_to_label_train = findcsv("train", data_dir)
     val_files, file_to_label_val = findcsv("val", data_dir)
+    test_files, file_to_label_test = findcsv("test",data_dir)
 
     list_labels = getUniqueLabels(data_dir)
-    print("Unique Values: ", list_labels)
+    print("Unique Values: ",list_labels)
 
     n_output = len(list_labels)
     print("n output ", n_output)
@@ -182,13 +173,15 @@ if __name__ == '__main__':
 
     file_to_int_train = {k: label_to_int[v] for k, v in file_to_label_train.items()}
     file_to_int_val = {k: label_to_int[v] for k, v in file_to_label_val.items()}
+    file_to_int_test = {k: label_to_int[v] for k, v in file_to_label_test.items()}
 
     # In[15]:
     ARGS.lr *= ARGS.batch
     print("learning rate ", ARGS.lr)
 
+
     if ARGS.model is None:
-        model = getModel(ARGS.pretrained_mod, ARGS.lr, n_output)
+        model = getModel(ARGS.pretrained_mod,ARGS.lr,n_output)
 
     else:
         # load the checkpoint from disk
@@ -206,14 +199,6 @@ if __name__ == '__main__':
 
     earlystop = EarlyStopping(monitor='val_acc', patience=ARGS.early_stopping_patience_epochs, mode='max')
 
-    if ARGS.model is None:
-        check = BEST_MODEL
-    else:
-        check = ARGS.model
-
-    mcheckpoint = ModelCheckpoint(check, monitor='val_acc', save_best_only=True, mode='max')
-    logger = keras.callbacks.CSVLogger(HISTORY_CSV, separator=",", append=True)
-
     training_generator = Train_Generator("train", tr_files, file_to_int_train, freq_compress=ARGS.freq_compress,
                                          augment=True,
                                          batch_size=ARGS.batch, add_noise=ARGS.add_noise)
@@ -221,35 +206,123 @@ if __name__ == '__main__':
                                            augment=False,
                                            batch_size=ARGS.batch)
 
-    H = model.fit_generator(generator=training_generator, epochs=ARGS.n_epochs, initial_epoch=ARGS.initial_epoch,
-                            steps_per_epoch=math.floor(len(tr_files) // ARGS.batch),
-                            validation_data=validation_generator,
-                            validation_steps=math.ceil(len(val_files) // ARGS.batch),
-                            use_multiprocessing=False,
-                            workers=ARGS.n_threads, verbose=1,
-                            callbacks=[mcheckpoint, reduce_lr, earlystop, logger])
+    all_scores = []
+    for i in range(10):
+        dir = ARGS.res_dir
 
-    # In[]:
+        HISTORY_CSV = "{}".format(dir) + "{}_history.csv".format(i)
+        TEST_FILES_CSV = "{}".format(dir) + "{}_test_files.csv".format(i)
+        MODEL_STRUCTURE_JSON = "{}".format(dir) + "{}_model_structure.json".format(i)
+        WEIGHTS_CNN = "{}".format(dir) + "{}_weights.h5".format(i)
+        BEST_MODEL = "{}".format(dir) + "{}_best_model.h5".format(i)
+        PLOT = "{}".format(dir) + "{}_plot.png".format(i)
+        RESULTS_CSV = "{}".format(dir) + "{}_res_test.csv".format(i)
+        WEIGHTS_CSV = "{}".format(dir) + "{}_weights.csv".format(i)
+        LOG = "{}".format(dir) + "{}_log/".format(i)
+        SCORES_CSV = "{}".format(dir) + "{}_scores.csv".format(i)
 
-    model_structure = model.to_json()  # convert the NN into JSON
-    f = Path(MODEL_STRUCTURE_JSON)  # write the JSON data into a text file
-    f.write_text(model_structure)  # Pass in the data that we want to write into the file.
+        if ARGS.model is None:
+            check = BEST_MODEL
+        else:
+            check = ARGS.model
 
-    model.save_weights(BEST_MODEL)
-    # pd.DataFrame.from_dict(H.history).to_csv(HISTORY_CSV, index=False)
+        mcheckpoint = ModelCheckpoint(check, monitor='val_acc', save_best_only=True, mode='max')
+        logger = keras.callbacks.CSVLogger(HISTORY_CSV, separator=",", append=True)
 
-    # In[19]:
+        H = model.fit_generator(generator=training_generator, epochs=ARGS.n_epochs, initial_epoch=ARGS.initial_epoch,
+                                steps_per_epoch=math.floor(len(tr_files) // ARGS.batch),
+                                validation_data=validation_generator,
+                                validation_steps=math.ceil(len(val_files) // ARGS.batch),
+                                use_multiprocessing=False,
+                                workers=ARGS.n_threads, verbose=1,
+                                callbacks=[mcheckpoint, reduce_lr, earlystop,logger])
 
-    # plot the training loss and accuracy
-    N = len(H.history['loss'])
-    plt.style.use("ggplot")
-    plt.figure()
-    plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
-    plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
-    plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
-    plt.plot(np.arange(0, N), H.history["val_acc"], label="val_acc")
-    plt.title("Training Loss and Accuracy on Dataset")
-    plt.xlabel("Epoch #")
-    plt.ylabel("Loss/Accuracy")
-    plt.legend(loc="lower left")
-    plt.savefig(PLOT)
+        # In[]:
+
+        model_structure = model.to_json()  # convert the NN into JSON
+        f = Path(MODEL_STRUCTURE_JSON)  # write the JSON data into a text file
+        f.write_text(model_structure)  # Pass in the data that we want to write into the file.
+
+        model.save_weights(BEST_MODEL)
+        #pd.DataFrame.from_dict(H.history).to_csv(HISTORY_CSV, index=False)
+
+        # In[19]:
+
+        # plot the training loss and accuracy
+        N = len(H.history['loss'])
+        plt.style.use("ggplot")
+        plt.figure()
+        plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
+        plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
+        plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
+        plt.plot(np.arange(0, N), H.history["val_acc"], label="val_acc")
+        plt.title("Training Loss and Accuracy on Dataset")
+        plt.xlabel("Epoch #")
+        plt.ylabel("Loss/Accuracy")
+        plt.legend(loc="lower left")
+        plt.savefig(PLOT)
+
+        dl = Dataloader(False, freq_compress=ARGS.freq_compress)
+
+
+        batch_data = [dl.load_audio_file(fpath) for fpath in test_files]
+        batch_data = np.array(batch_data)[:, :, :, np.newaxis]
+        batch_labels = [file_to_int_test[fpath] for fpath in test_files]
+        batch_labels = np.array(batch_labels)
+        loss,acc = model.evaluate(batch_data,batch_labels)
+        preds = model.predict(batch_data).tolist()
+
+        print("score ", acc)
+        all_scores.append(acc)
+
+        classes_to_int = np.arange(len(list_labels))
+        dict_scores = {key: [] for key in classes_to_int}
+
+        def add_to_dict(scores):
+            for i in range(len(scores)):
+                dict_scores.get(i).append(scores[i])
+
+
+        pred_1 = []
+        pred_1_score = []
+        pred_2 = []
+        pred_2_score = []
+
+        for i in preds:
+            line = add_to_dict(i)
+            idxs = np.argsort(i)[::-1][:2]  # get top2 indexes
+            pred_1.append(list_labels[idxs[0]])
+            pred_1_score.append(i[idxs[0]])
+            pred_2.append(list_labels[idxs[1]])
+            pred_2_score.append(i[idxs[1]])
+
+        df_scores = pd.DataFrame(dict_scores)
+        df_scores.to_csv(SCORES_CSV, index=False)
+
+        file_name = []
+        labels = []
+
+        for i in test_files:
+            file_name.append(i)
+            labels.append(file_to_label_test[i])
+
+        df = pd.DataFrame(file_name, columns=["file_name"])
+        print("df len ", len(df))
+        df['label'] = labels
+        print("pred 1 len ", len(pred_1))
+        df['pred_1'] = pred_1
+
+        df['pred_1_score'] = pred_1_score
+        df['pred_2'] = pred_2
+        df['pred_2_score'] = pred_2_score
+
+        df.to_csv(RESULTS_CSV, index=False)
+
+    acc_scores = open(ARGS.res_dir + "acc_scores.csv","w+")
+    print("All SCORES {}".format(all_scores))
+    print("MAX SCORE:{} , FOLD:{}".format(max(all_scores),all_scores.index(max(all_scores))))
+    print("AVERAGE SCORE {}".format(statistics.mean(all_scores)))
+    acc_scores.write("All SCORES {}".format(all_scores))
+    acc_scores.write("MAX SCORE:{} , FOLD:{}".format(max(all_scores),all_scores.index(max(all_scores))))
+    acc_scores.write("AVERAGE SCORE {}".format(statistics.mean(all_scores)))
+    acc_scores.close()
