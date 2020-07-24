@@ -228,13 +228,13 @@ if __name__ == '__main__':
     label_to_int = {k: v for v, k in enumerate(list_labels)}
 
     kf = StratifiedShuffleSplit(n_splits=10,test_size=79)
-    fold = 1
+    fold = 0
     all_scores = []
     for train_i, test_i in kf.split(files,list(file_to_label.values())):
         #print("len train_i ", len(train_i))
         #print("len test_i ", len(test_i))
-        #print("train i ", train_i)
-        #print("test i ", test_i)
+       # print("train i ", train_i)
+       # print("test i ", test_i)
         dir = ARGS.res_dir
 
         TRAIN_CSV = open("{}".format(dir) + "{}_train.csv".format(str(fold)),"w+")
@@ -387,5 +387,7 @@ if __name__ == '__main__':
         plt.legend(loc="lower left")
         plt.savefig(PLOT)
 
-    print("All SCORES ", all_scores)
-    print("AVERAGE SCORE ", statistics.mean(all_scores))
+    acc_scores = open(ARGS.res_dir + "acc_scores.txt","w+")
+    acc_scores.write("All SCORES {}".format(all_scores))
+    acc_scores.write("MAX SCORE:{} , FOLD:{}".format(max(all_scores),all_scores.index(max(all_scores))))
+    acc_scores.write("AVERAGE SCORE {}".format(statistics.mean(all_scores)))
