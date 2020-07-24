@@ -25,7 +25,7 @@ import argparse
 import math
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import KFold,train_test_split
+from sklearn.model_selection import KFold,train_test_split,StratifiedShuffleSplit
 
 import re
 from tqdm import tqdm
@@ -108,9 +108,8 @@ ARGS = ap.parse_args()
 
 
 def checkIfAllLables(test_i, files, ftl, labels):
-    print("labels ", labels)
+
     labs = []
-    print("labs ", labs)
     for i in test_i:
         if ftl.get(files[i]) not in labs:
             print("test contains label ", ftl.get(files[i]))
@@ -131,7 +130,6 @@ def containAllLabels(train_i, test_i, files, ftl, labels):
     return train_i, test_i
 
 def writeFilestoCSV(ftl, csv):
-    print("csv ", csv)
     csv.write("file_name,label\n")
     for k, v in ftl.items():
         split = k.split("/")
@@ -229,10 +227,12 @@ if __name__ == '__main__':
 
     label_to_int = {k: v for v, k in enumerate(list_labels)}
 
-    kf = KFold(n_splits=10)
+    kf = StratifiedShuffleSplit(n_splits=10,test_size=79)
     fold = 1
     all_scores = []
-    for train_i, test_i in kf.split(files):
+    for train_i, test_i in kf.split(files,list(file_to_label.values())):
+        #print("len train_i ", len(train_i))
+        #print("len test_i ", len(test_i))
         #print("train i ", train_i)
         #print("test i ", test_i)
         dir = ARGS.res_dir
@@ -252,7 +252,10 @@ if __name__ == '__main__':
         fold += 1
 
         train_i, test_i = containAllLabels(train_i,test_i,files,file_to_label,list_labels)
-        train_i,val_i = train_test_split(train_i,test_size=0.186)
+        train_i,val_i = train_test_split(train_i,test_size=72)
+       # print("len train i after val split ", len(train_i))
+       # print("len val ", len(val_i))
+
 
         tr_files = [files[i] for i in train_i]
         file_to_label_train = ftl(tr_files,file_to_label)
