@@ -3,6 +3,7 @@
 from pathlib import Path
 from Train_Generator import *
 from OrganizeData import *
+import Resnet18
 import matplotlib.pyplot as plt
 
 import tensorflow.compat.v1 as tf
@@ -144,48 +145,47 @@ def ftl(files, file_to_label):
 
 def getModel(n_output):
     if ARGS.model is None:
-        print("[INFO] compiling model...")
-        f = Path(ARGS.pretrained_mod + "model_structure.json")
-        model_structure = f.read_text()
+        if ARGS.pretrained_mod is None:
+            model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), n_output)
+        else:
 
-        # Recreate the Keras model object from the json data
-        ae = model_from_json(model_structure)
+            print("[INFO] compiling model...")
+            f = Path(ARGS.pretrained_mod + "model_structure.json")
+            model_structure = f.read_text()
 
-        # Re-load the model's trained weights
-        print("LOOOP")
-        initial_weights = {}
-        for layer in ae.get_layer('encoder').layers[-16:]:
-            if not re.findall("add|activation", layer.name):
-                print(np.shape(layer.get_weights()))
-                print("layer name: ", layer.name)
-                initial_weights.update({layer.name: layer.get_weights()})
+            # Recreate the Keras model object from the json data
+            ae = model_from_json(model_structure)
 
-        print(initial_weights.keys())
+            # Re-load the model's trained weights
+            print("LOOOP")
+            initial_weights = {}
+            for layer in ae.get_layer('encoder').layers[-16:]:
+                if not re.findall("add|activation", layer.name):
+                    print(np.shape(layer.get_weights()))
+                    print("layer name: ", layer.name)
+                    initial_weights.update({layer.name: layer.get_weights()})
 
-        # print("initial weights ", initial_weights)
-        ae.load_weights(ARGS.pretrained_mod + "best_model.h5")
+            print(initial_weights.keys())
 
-        for layer in ae.get_layer('encoder').layers[-16:]:
-            if not re.findall("add|activation", layer.name):
-                print("layer name: ", layer.name)
-                layer.set_weights(initial_weights.get(layer.name))
+            # print("initial weights ", initial_weights)
+            ae.load_weights(ARGS.pretrained_mod + "best_model.h5")
 
-        # new_w = np.random.uniform(low=0.0,high=0.1,size=np.shape(last_layer.get_weights()))
-        # new_weights = he_uniform(seed=random.randint(0,1000))(np.shape(last_layer.get_weights()))
-        # print("array ", new_weights.numpy())
+            for layer in ae.get_layer('encoder').layers[-16:]:
+                if not re.findall("add|activation", layer.name):
+                    print("layer name: ", layer.name)
+                    layer.set_weights(initial_weights.get(layer.name))
 
-        # print("*************\n weights after ", last_layer.get_weights())
-        y = ae.get_layer('encoder').get_output_at(-1)
+            y = ae.get_layer('encoder').get_output_at(-1)
 
-        block_shape = K.int_shape(y)
-        pool2 = AveragePooling2D(pool_size=(block_shape[1], block_shape[2]),
-                                 strides=(1, 1))(y)
+            block_shape = K.int_shape(y)
+            pool2 = AveragePooling2D(pool_size=(block_shape[1], block_shape[2]),
+                                     strides=(1, 1))(y)
 
-        flatten1 = Flatten()(pool2)
-        dense = Dense(units=n_output,
-                      activation="softmax", use_bias=True, kernel_initializer="he_normal")(flatten1)
+            flatten1 = Flatten()(pool2)
+            dense = Dense(units=n_output,
+                          activation="softmax", use_bias=True, kernel_initializer="he_normal")(flatten1)
 
-        model = Model(inputs=ae.input, outputs=dense)
+            model = Model(inputs=ae.input, outputs=dense)
 
 
         opt = optimizers.Adam(lr=lr, beta_1=0.5, beta_2=0.999, amsgrad=False)
@@ -391,7 +391,7 @@ if __name__ == '__main__':
     print("All SCORES {}".format(all_scores))
     print("MAX SCORE:{} , FOLD:{}".format(max(all_scores),all_scores.index(max(all_scores))))
     print("AVERAGE SCORE {}".format(statistics.mean(all_scores)))
-    acc_scores.write("All SCORES {}".format(all_scores))
-    acc_scores.write("MAX SCORE:{} , FOLD:{}".format(max(all_scores),all_scores.index(max(all_scores))))
+    acc_scores.write("All SCORES {}\n".format(all_scores))
+    acc_scores.write("MAX SCORE:{} , FOLD:{}\n".format(max(all_scores),all_scores.index(max(all_scores))))
     acc_scores.write("AVERAGE SCORE {}".format(statistics.mean(all_scores)))
     acc_scores.close()

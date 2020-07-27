@@ -12,6 +12,7 @@ import math
 import cv2
 import matplotlib.pyplot as plt
 import librosa.display
+import re
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 ap = argparse.ArgumentParser()
@@ -48,61 +49,46 @@ decoded = None
 for batch_files in tqdm(dl.chunker(test_files, size=ARGS.batch), total=math.ceil(len(list(test_files)) // ARGS.batch)):
          batch_data = [dl.load_audio_file(fpath) for fpath in batch_files]
          batch_data = np.array(batch_data)[:, :, :, np.newaxis]
-         print("batch data shape ", batch_data.shape)
          preds = autoencoder.predict(batch_data)
          if _original is None:
              _original = batch_data
          else:
              _original = np.concatenate((_original,batch_data))
-             #_original.append(batch_data)
-         print("orginal shape ", _original.shape)
-         print("orginal type ", type(_original))
          if decoded is None:
              decoded = preds
          else:
              decoded = np.concatenate((decoded,preds))
-             #decoded.append(preds)
-         print("decoded shape ", decoded.shape)
-         print("decoded type ", type(decoded))
+
 
 
 outputs = None
 
 def getID(test_file):
     split = test_file.split("/")
-    ID = split[len(split)-1].replace(".wav","")
+    if re.findall("aiff",split[len(split)-1]):
+        ID = split[len(split) - 1].replace(".aiff", "")
+    else:
+        ID = split[len(split)-1].replace(".wav","")
     return ID
 
 def spec(spec1,spec2,ID):
-    fig = plt.Figure()
-    canvas = FigureCanvas(fig)
-    ax = fig.add_subplot(111)
-    librosa.display.specshow(spec1, sr=44100, ax=ax, x_axis='time', y_axis=ARGS.freq_compress)
+
+    plt.subplot(121)
+    librosa.display.specshow(spec1.T, sr=44100, x_axis='time', y_axis=ARGS.freq_compress)
     plt.title("encoded")
 
-    fig = plt.Figure()
-    canvas = FigureCanvas(fig)
-    ax = fig.add_subplot(112)
-    librosa.display.specshow(spec2, sr=44100, ax=ax, x_axis='time', y_axis=ARGS.freq_compress)
+    plt.subplot(122)
+    librosa.display.specshow(spec2.T, sr=44100, x_axis='time', y_axis=ARGS.freq_compress)
     plt.title("decoded")
-    fig.savefig(ID)
+    plt.savefig(ID)
     plt.close()
 
 # loop over our number of output samples
 for i in range(0, len(test_files)-1):
-    # grab the original image and reconstructed image
-    #original = (_original[i] * 255).astype("uint8")
-    #recon = (decoded[i] * 255).astype("uint8")
     ID = getID(test_files[i])
-    # stack the original and reconstructed image side-by-side
-    #output = np.hstack([original, recon])
-    print("shape _original before ", _original[i].shape)
+
     original = np.squeeze(_original[i],axis=2)
-    print("original shape ", original.shape)
     recon = np.squeeze(decoded[i],axis=2)
-    print("dec shape ", recon.shape)
-    spec(original,recon,folder + ID)
-    #spec(recon,folder + ID + "_decoded.png")
-   # cv2.imwrite(folder +"{}.png".format(ID),output)
+    spec(original,recon,folder + "specs/" + ID)
 
 

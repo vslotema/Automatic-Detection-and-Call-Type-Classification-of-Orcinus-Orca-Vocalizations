@@ -160,6 +160,7 @@ def getModel(folder):
     #y = ae.layers[-2].output
 
     y = ae.get_layer('encoder').get_output_at(-1)
+    #y = ae.layers[-1].output
     #block_shape = K.int_shape(y)
     #y = MaxPooling2D(pool_size=(block_shape[1], block_shape[2]),
      #                        strides=(1, 1))(y)
@@ -171,8 +172,8 @@ def getModel(folder):
      #   y = ae.get_layer('bottleneck').layers[4](y)
     #else:
     y = Flatten()(y)
-   # y = Dense(units=12,
-      #               activation="softmax", use_bias=True,kernel_initializer="he_normal")(y)
+    y = Dense(units=12,
+                     activation="softmax", use_bias=True,kernel_initializer="he_normal")(y)
     #print("y shape before flatten ", y.shape)
 
     #y = Flatten()(y)
@@ -247,43 +248,48 @@ if __name__ == '__main__':
     #plotSortedEigenvalGraphLap(eigenvals, eigenvcts,save)
 
     #plotInertia(features,1,30,save)
-    spec = SpectralClustering(n_clusters=n_clusters,n_init=20,affinity='rbf',gamma=0.0001)
-    print("affinity matrix ", spec.affinity_matrix_)
-    clusters = spec.fit_predict(features)
-    print("clusters ", clusters)
-    print("affinity matrix ", spec.affinity_matrix_)
-    pure_kmeans = KMeans(n_clusters=n_clusters).fit(features.astype('float64'))
+    gamma = [1.0,0.5,0.1,0.05,0.01,0.005,0.001,0.0005,0.0001,0.00005,0.00001]
+    for g in gamma:
 
-    plot(spec.affinity_matrix_, clusters, pure_kmeans.labels_, save + "clusters.PNG")
+        spec = SpectralClustering(n_clusters=n_clusters,eigen_solver='arpack',n_init=1000,affinity='rbf',gamma=g)
+        #print("affinity matrix ", spec.affinity_matrix_)
+        clusters = spec.fit_predict(features)
+        print("clusters ", clusters)
+        print("affinity matrix ", spec.affinity_matrix_)
+        pure_kmeans = KMeans(n_clusters=n_clusters).fit(features.astype('float64'))
 
-    df = pd.DataFrame(files, columns=["file_name"])
-    df['label'] = list(file_to_label.values())
-    df['features'] = list(features)
-    df['spectral_c'] = clusters
-    df['kmeans_c'] = pure_kmeans.labels_
-    df.to_csv(folder + "clusters.csv", index=False)
+        plot(spec.affinity_matrix_, clusters, pure_kmeans.labels_, save + "{}_clusters.PNG".format(g))
 
-    dfr = pd.read_csv(folder + "clusters.csv")
+        df = pd.DataFrame(files, columns=["file_name"])
+        df['label'] = list(file_to_label.values())
+        df['features'] = list(features)
+        df['spectral_c'] = clusters
+        df['kmeans_c'] = pure_kmeans.labels_
+        df.to_csv(folder + "{}_clusters.csv".format(g), index=False)
 
-    spec = {}
-    kmeans= {}
-    for _,val in enumerate(dfr.values):
-        lab = val[1]
-        spec_c = val[3]
-        kmeans_c = val[4]
+        dfr = pd.read_csv(folder + "{}_clusters.csv".format(g))
 
-        spec = createdict(spec,spec_c,lab,n_clusters)
-        kmeans = createdict(kmeans,kmeans_c,lab,n_clusters)
+        spec = {}
+        kmeans= {}
+        for _,val in enumerate(dfr.values):
+            lab = val[1]
+            spec_c = val[3]
+            kmeans_c = val[4]
 
-    if not os.path.isdir(save + "SPEC/"):
-        os.mkdir(save + "SPEC/")
-    spec_path = save + "SPEC/"
-    createPiePlots(spec,spec_path)
+            spec = createdict(spec,spec_c,lab,n_clusters)
+            kmeans = createdict(kmeans,kmeans_c,lab,n_clusters)
 
-    if not os.path.isdir(save + "KMEANS/"):
-        os.mkdir(save + "KMEANS/")
-    kmeans_path = save + "KMEANS/"
-    createPiePlots(kmeans,kmeans_path)
+        spec_dir = save + "{}_SPEC/".format(g)
+        if not os.path.isdir(spec_dir):
+            os.mkdir(spec_dir)
+        spec_path = spec_dir
+        createPiePlots(spec,spec_path)
+
+        kmeans_dir = save + "{}_KMEANS/".format(g)
+        if not os.path.isdir(kmeans_dir):
+            os.mkdir(kmeans_dir)
+        kmeans_path = kmeans_dir
+        createPiePlots(kmeans,kmeans_path)
 
 
 

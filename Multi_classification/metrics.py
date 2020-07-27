@@ -48,7 +48,7 @@ print(metrics.classification_report(results.label.values, results.pred_1.values,
 
 ############## ROC Curve
 
-scores = pd.read_csv(path + "scores_res.csv")
+scores = pd.read_csv(path + "scores.csv")
 y_score = []
 for i in scores.values:
     y_score.append(i.tolist())

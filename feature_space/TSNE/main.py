@@ -2,6 +2,7 @@
 from Train_Generator import *
 from OrganizeData import *
 
+from sklearn.cluster import KMeans, SpectralClustering
 from pathlib import Path
 import matplotlib.pyplot as plt
 import argparse
@@ -21,6 +22,7 @@ from keras.layers import (
 )
 from keras import Model
 import keras.backend as K
+
 
 ap = argparse.ArgumentParser()
 
@@ -139,7 +141,7 @@ if __name__ == '__main__':
 
     # In[2]:
     dir = ARGS.res_dir
-    tsne_save = "{}".format(dir) + ARGS.freq_compress + "_TSNE.PNG"
+
 
     data_dir = ARGS.data_dir
     files, file_to_label = findcsv("test", data_dir)
@@ -159,18 +161,20 @@ if __name__ == '__main__':
 
     # Re-load the model's trained weights
     ae.load_weights(folder + "best_model.h5")
-    y = ae.get_layer('encoder').get_output_at(-1)
-    y = ae.get_layer('bottleneck').layers[0](y)
-    y = ae.get_layer('bottleneck').layers[1](y)
-    print(ae.get_layer('bottleneck').layers[1].name)
-    y = ae.get_layer('bottleneck').layers[3](y)
+    y = ae.layers[-1].output
+    #y = ae.get_layer('encoder').get_output_at(-1)
+    #y = ae.get_layer('bottleneck').layers[0](y)
+    #y = ae.get_layer('bottleneck').layers[1](y)
+    #print(ae.get_layer('bottleneck').layers[1].name)
+    #y = ae.get_layer('bottleneck').layers[3](y)
+
 
     #block_shape = K.int_shape(y)
     #pool2 = AveragePooling2D(pool_size=(block_shape[1], block_shape[2]),
      #                        strides=(1, 1))(y)
 
     #flatten1 = Flatten()(pool2)
-    y = Flatten()(y)
+    #y = Flatten()(y)
 
     model = Model(inputs=ae.input, outputs=y)
     model.summary()
@@ -181,6 +185,9 @@ if __name__ == '__main__':
     print(features.shape)
     print(features)
     #print("features shape ", features.shape)
-    tsne = TSNE(n_components=2).fit_transform(features)#p.reshape(features,(-1,1))
-
-    visualize_tsne_dots(tsne,tsne_save)
+    p = 1
+    for i in range(51):
+        tsne_save = "{}".format(dir) + ARGS.freq_compress + "_TSNE_{}.PNG".format(p)
+        tsne = TSNE(n_components=2,perplexity=p,n_iter=1000,learning_rate=200).fit_transform(features)#p.reshape(features,(-1,1))
+        visualize_tsne_dots(tsne,tsne_save)
+        p += 1

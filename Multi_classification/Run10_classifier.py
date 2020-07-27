@@ -106,10 +106,12 @@ ARGS = ap.parse_args()
 
 def getModel(pm,lr,n_output):
 
+
     if pm is None:
+        print("no pretrained model")
         model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), n_output)
     else:
-        print("[INFO] compiling model...")
+        print("[INFO] compiling pretrained model...")
         f = Path(pm + "model_structure.json")
         model_structure = f.read_text()
 
@@ -180,16 +182,6 @@ if __name__ == '__main__':
     print("learning rate ", ARGS.lr)
 
 
-    if ARGS.model is None:
-        model = getModel(ARGS.pretrained_mod,ARGS.lr,n_output)
-
-    else:
-        # load the checkpoint from disk
-        print("[INFO] loading {}...".format(ARGS.model))
-        model = models.load_model(ARGS.model)
-        print("[INFO] current learning rate: {}".format(
-            K.get_value(model.optimizer.lr)))
-
     patience_lr = math.ceil(ARGS.lr_patience_epochs / ARGS.epochs_per_eval)
     patience_lr = int(max(1, patience_lr))
     print("patience lr ", patience_lr)
@@ -208,6 +200,7 @@ if __name__ == '__main__':
 
     all_scores = []
     for i in range(10):
+
         dir = ARGS.res_dir
 
         HISTORY_CSV = "{}".format(dir) + "{}_history.csv".format(i)
@@ -228,6 +221,16 @@ if __name__ == '__main__':
 
         mcheckpoint = ModelCheckpoint(check, monitor='val_acc', save_best_only=True, mode='max')
         logger = keras.callbacks.CSVLogger(HISTORY_CSV, separator=",", append=True)
+
+        if ARGS.model is None:
+            model = getModel(ARGS.pretrained_mod, ARGS.lr, n_output)
+
+        else:
+            # load the checkpoint from disk
+            print("[INFO] loading {}...".format(ARGS.model))
+            model = models.load_model(ARGS.model)
+            print("[INFO] current learning rate: {}".format(
+                K.get_value(model.optimizer.lr)))
 
         H = model.fit_generator(generator=training_generator, epochs=ARGS.n_epochs, initial_epoch=ARGS.initial_epoch,
                                 steps_per_epoch=math.floor(len(tr_files) // ARGS.batch),
@@ -322,7 +325,7 @@ if __name__ == '__main__':
     print("All SCORES {}".format(all_scores))
     print("MAX SCORE:{} , FOLD:{}".format(max(all_scores),all_scores.index(max(all_scores))))
     print("AVERAGE SCORE {}".format(statistics.mean(all_scores)))
-    acc_scores.write("All SCORES {}".format(all_scores))
-    acc_scores.write("MAX SCORE:{} , FOLD:{}".format(max(all_scores),all_scores.index(max(all_scores))))
-    acc_scores.write("AVERAGE SCORE {}".format(statistics.mean(all_scores)))
+    acc_scores.write("All SCORES {}\n".format(all_scores))
+    acc_scores.write("MAX SCORE:{} , FOLD:{}\n".format(max(all_scores),all_scores.index(max(all_scores))))
+    acc_scores.write("AVERAGE SCORE {}\n".format(statistics.mean(all_scores)))
     acc_scores.close()
