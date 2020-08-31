@@ -17,7 +17,8 @@ from keras.layers import (
     Input,
     Dense,
     Flatten,
-    AveragePooling2D
+    AveragePooling2D,
+    GlobalAveragePooling2D
 )
 
 from keras.initializers import he_uniform
@@ -120,30 +121,33 @@ def getModel(pm,lr,n_output):
 
         initial_weights = {}
         for layer in ae.get_layer('encoder').layers[-16:]:
-            if not re.findall("add|activation",layer.name):
+            if not re.findall("add|activation|batch_normalization",layer.name):
                 print(np.shape(layer.get_weights()))
                 print("layer name: ", layer.name)
                 initial_weights.update({layer.name:layer.get_weights()})
 
-        print(initial_weights.keys())
+        # print(initial_weights.keys())
+        #
+        # # Re-load the model's trained weights
+        # ae.load_weights(ARGS.pretrained_mod + "best_model.h5")
+        # for layer in ae.get_layer('encoder').layers:
+        #     if re.findall("batch_normalization",layer.name):
+        #         layer.trainable=False
 
-        # Re-load the model's trained weights
-        ae.load_weights(ARGS.pretrained_mod + "best_model.h5")
         # Load last residual layer with initial weights
         for layer in ae.get_layer('encoder').layers[-16:]:
-            if not re.findall("add|activation",layer.name):
+            if not re.findall("add|activation|batch_normalization",layer.name):
                 print("layer name: ", layer.name)
                 layer.set_weights(initial_weights.get(layer.name))
 
         y = ae.get_layer('encoder').get_output_at(-1)
 
         block_shape = K.int_shape(y)
-        pool2 = AveragePooling2D(pool_size=(block_shape[1], block_shape[2]),
-                                 strides=(1, 1))(y)
+        pool2 = GlobalAveragePooling2D()(y)
 
-        flatten1 = Flatten()(pool2)
+       # flatten1 = Flatten()(pool2)
         dense = Dense(units=n_output,
-                      activation="softmax",use_bias=True,kernel_initializer="he_normal")(flatten1)
+                      activation="softmax",use_bias=True,kernel_initializer="he_normal")(pool2)
 
         model = Model(inputs=ae.input, outputs=dense)
 

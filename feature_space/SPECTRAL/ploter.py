@@ -1,3 +1,5 @@
+# Most methods by (c) Juanitor Duz https://github.com/juanitorduz/website_projects/blob/master/Python/spectral_clustering.ipynb
+# and (c) Grigory Syrabriakov https://www.learnopencv.com/t-sne-for-feature-visualization/
 from matplotlib import pyplot as plt
 from itertools import cycle, islice
 import numpy as np
@@ -8,24 +10,63 @@ sns_c = sns.color_palette(palette='deep')
 from sklearn.cluster import KMeans
 
 
-def plot(X, y_sp, y_km,path):
+def plot(x,y, y_sp, y_km,path):
+
     colors = np.array(list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a',
                                                 '#f781bf', '#a65628', '#984ea3',
                                                 '#999999', '#e41a1c', '#dede00']),
                                         int(max(y_km) + 1))))
 
-    print("X ", X)
     plt.subplot(121)
-    plt.scatter(np.real(X[:,0]), np.real(X[:,1]), s=10, color=colors[y_sp])
-    plt.scatter(np.imag(X[:,0]), np.imag(X[:,1]), s=10, color=colors[y_sp])
+    plt.scatter(x, y, s=10, color=colors[y_sp])
+   # plt.scatter(np.imag(tx[:,0]), np.imag(ty[:,1]), s=10, color=colors[y_sp])
     plt.title("Spectral Clustering")
     plt.subplot(122)
-    plt.scatter(np.real(X[:,0]), np.real(X[:,1]), s=10, color=colors[y_km])
-    plt.scatter(np.imag(X[:, 0]), np.imag(X[:, 1]), s=10, color=colors[y_km])
+    plt.scatter(x, y, s=10, color=colors[y_km])
+   # plt.scatter(np.imag(tx[:, 0]), np.imag(ty[:, 1]), s=10, color=colors[y_km])
     plt.title("Kmeans Clustering")
     # plt.show()
     plt.savefig(path)
     plt.close()
+
+
+def visualize_tsne_and_clusters(tx,ty,label,labels,save):
+    # extract x and y coordinates representing the positions of the images on T-SNE plot
+
+    # initialize a matplotlib plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.set_facecolor('white')
+
+    colors = cycle(
+        ['aqua', 'darkorange', 'cornflowerblue', 'yellow', 'red', 'blue', "violet", "teal", "salmon", 'royalblue',
+         "#0BBD6D", "slateblue", "black", "indigo", "grey", "purple", "lightgreen", "navy", "#EEB1C6"])
+    for i, color in zip(range(len(label)), colors):
+        # for label in colors_per_class:
+        # find the samples of the current class in the data
+
+        indices = [j for j, l in enumerate(labels) if l == label[i]]
+
+        # extract the coordinates of the points of this class only
+        current_tx = np.take(tx, indices)
+        current_ty = np.take(ty, indices)
+        marker = ['o',".",'x','2','+']
+        m = i%5
+        # add a scatter plot with the corresponding color and label
+        ax.scatter(current_tx, current_ty, marker=marker[m],c=color, label=label[i])
+
+    # build a legend using the labels we set previously
+    ncol=1
+    if len(label) > 30:
+        ncol=3
+    elif len(label) >= 20:
+        ncol=2
+    ax.grid(color='grey', linestyle='-', linewidth=0.25, alpha=0.5)
+    ax.legend(loc=(1.01, 0), ncol=ncol,facecolor='white',columnspacing=0.25,handletextpad=0.1)
+    plt.tight_layout()
+    plt.savefig(save)
+    plt.close()
+
 
 def plotSortedEigenvalGraphLap(eigenvals, eigenvcts,path):
     eigenvcts_norms = np.apply_along_axis(

@@ -160,18 +160,22 @@ def getModel(n_output):
             print("LOOOP")
             initial_weights = {}
             for layer in ae.get_layer('encoder').layers[-16:]:
-                if not re.findall("add|activation", layer.name):
+                if not re.findall("add|activation|batch_normalization", layer.name):
                     print(np.shape(layer.get_weights()))
                     print("layer name: ", layer.name)
                     initial_weights.update({layer.name: layer.get_weights()})
 
             print(initial_weights.keys())
 
-            # print("initial weights ", initial_weights)
+            # Re-load the model's trained weights
             ae.load_weights(ARGS.pretrained_mod + "best_model.h5")
+            for layer in ae.get_layer('encoder').layers:
+                if re.findall("batch_normalization", layer.name):
+                    layer.trainable = False
 
+            # Load last residual layer with initial weights
             for layer in ae.get_layer('encoder').layers[-16:]:
-                if not re.findall("add|activation", layer.name):
+                if not re.findall("add|activation|batch_normalization", layer.name):
                     print("layer name: ", layer.name)
                     layer.set_weights(initial_weights.get(layer.name))
 

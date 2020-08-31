@@ -36,7 +36,7 @@ cm_df = pd.DataFrame(cm,
                      columns = class_labels)
 fig = plt.figure(figsize=(5,5))
 sns.heatmap(cm_df, annot=True,fmt='d')
-plt.title('SVM Linear Kernel \nAccuracy:{0:.3f}'.format(accuracy_score(results.label.values, results.pred_1.values)))
+plt.title('Test Accuracy:{0:.3f}'.format(accuracy_score(results.label.values, results.pred_1.values)))
 plt.ylabel('True label')
 plt.xlabel('Predicted label')
 plt.show()

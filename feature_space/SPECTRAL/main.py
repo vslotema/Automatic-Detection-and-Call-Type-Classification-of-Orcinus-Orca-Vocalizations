@@ -6,7 +6,8 @@ from sklearn.cluster import KMeans, SpectralClustering
 
 from Train_Generator import *
 from OrganizeData import *
-from G import *
+from gap_statistic import *
+from TSNE_plotter import TSNE_plotter
 
 import argparse
 import math
@@ -31,10 +32,18 @@ from keras.layers import (
 from keras import Model
 import keras.backend as K
 import keras
-
+from sklearn.manifold import TSNE
 
 
 ap = argparse.ArgumentParser()
+
+ap.add_argument(
+    "-t",
+    "--tsne",
+    type=str,
+    default=None,
+    help="path of csv file with tsne coordinates",
+)
 
 ap.add_argument("--n_threads", type=int, default=4, help="number of working threads")
 
@@ -54,14 +63,6 @@ ap.add_argument("-ie", "--initial-epoch", type=int, default=0,
 ap.add_argument("--batch", type=int, default=32, help="choose batch size")
 
 ap.add_argument("--n-epochs", type=int, default=100, help="number of epochs")
-
-ap.add_argument(
-    "--lr",
-    "--learning_rate",
-    type=float,
-    default=1e-5,
-    help="Initial learning rate. Will get multiplied by the batch size.",
-)
 
 ap.add_argument(
     "-nc",
@@ -169,14 +170,14 @@ def getModel(folder):
     y = ae.get_layer('bottleneck').layers[2](y) # batchnormalization
     y = ae.get_layer('bottleneck').layers[3](y) # Relu
     #if re.findall("flatten",ae.get_layer('bottleneck').layers[4].name):
-     #   y = ae.get_layer('bottleneck').layers[4](y)
+   # y = ae.get_layer('bottleneck').layers[4](y)
     #else:
-    y = Flatten()(y)
-    y = Dense(units=12,
-                     activation="softmax", use_bias=True,kernel_initializer="he_normal")(y)
+    #y = Flatten()(y)
+    #y = Dense(units=12,
+     #                activation="softmax", use_bias=True,kernel_initializer="he_normal")(y)
     #print("y shape before flatten ", y.shape)
 
-    #y = Flatten()(y)
+    y = Flatten()(y)
 
     return Model(inputs=ae.input, outputs=y)
 
@@ -204,7 +205,6 @@ def createPiePlots(dict,path):
 
 if __name__ == '__main__':
 
-
     # In[2]:
     dir = ARGS.res_dir
     if not os.path.exists(dir + ARGS.freq_compress + "_PLOTS/"):
@@ -223,21 +223,34 @@ if __name__ == '__main__':
     model = getModel(folder)
     model.summary()
 
-
+    features, labels = getFeatures(files, model)
+    tsne_p = TSNE_plotter()
+    tsne_save = "{}".format(dir) + ARGS.freq_compress + "_TSNE.PNG"
     #label = getUniqueLabels(data_dir)
 
-    features, labels = getFeatures(files,model)
+    # if ARGS.tsne is None:
+    #     tsne = TSNE(n_components=2, perplexity=8, n_iter=5000, learning_rate=50, verbose=2,
+    #                early_exaggeration=18.0).fit_transform(features)
+    # else:
+    #     df = pd.read_csv(ARGS.tsne)
+    #     tsne = df.to_numpy()
+
+
+    tx = tsne_p.scale_to_01_range(features[:,0])
+    ty = tsne_p.scale_to_01_range(features[:,1])
+    #tx,ty = tsne_p.visualize_tsne_dots(tsne, tsne_save,list(set(labels)),labels)
+    #vis_tsne = save + "tsne.png"
+    #visualize_tsne_and_clusters(tx,ty, list(set(labels)), labels, vis_tsne)
     print("features shape ", features.shape)
-    #ks,Wks,Wkbs, sk = gap_statistic(features,1,30)
-    #print("ks ", ks)
-    #print("sk ", sk)
+   # print("tsne ", np.shape(tsne))
 
     #plotGap(ks,Wks,Wkbs,sk,save)
     if ARGS.n_clusters is None:
-        gap = gap(features)
-        gaps(gap, range(1, 30), save)
+        #gap = gap(features)
+        gap = gap(features,ks=range(1,60))
+        gaps(gap, range(1,60), save)
         gap = list(gap)
-        n_clusters = gap.index(max(gap))
+        n_clusters = gap.index(max(gap)) + 1
     else:
         n_clusters = ARGS.n_clusters
 
@@ -248,23 +261,46 @@ if __name__ == '__main__':
     #plotSortedEigenvalGraphLap(eigenvals, eigenvcts,save)
 
     #plotInertia(features,1,30,save)
-    gamma = [1.0,0.5,0.1,0.05,0.01,0.005,0.001,0.0005,0.0001,0.00005,0.00001]
+    gamma = [1.0,0.5,0.1,0.05,0.01,0.005,0.001]
     for g in gamma:
+        print(g)
 
         spec = SpectralClustering(n_clusters=n_clusters,eigen_solver='arpack',n_init=1000,affinity='rbf',gamma=g)
         #print("affinity matrix ", spec.affinity_matrix_)
         clusters = spec.fit_predict(features)
-        print("clusters ", clusters)
-        print("affinity matrix ", spec.affinity_matrix_)
         pure_kmeans = KMeans(n_clusters=n_clusters).fit(features.astype('float64'))
 
-        plot(spec.affinity_matrix_, clusters, pure_kmeans.labels_, save + "{}_clusters.PNG".format(g))
+        # plot(spec.affinity_matrix_[:,0],spec.affinity_matrix_[:,1], clusters, pure_kmeans.labels_, save + "{}_clusters.PNG".format(g))
+        # plot(tx,ty, clusters, pure_kmeans.labels_, save + "{}_clusters_tsnespace.PNG".format(g))
+
+
+        vis_spec = save + "{}_spec.png".format(g)
+        visualize_tsne_and_clusters(tx,ty, list(set(clusters)), clusters, vis_spec)
+        vis_kmeans = save + "{}_kmeans.png".format(g)
+        visualize_tsne_and_clusters(tx,ty,list(set(pure_kmeans.labels_)),pure_kmeans.labels_,vis_kmeans)
+        vis_kmeans = save + "{}_lab_kmeans.png".format(g)
+        visualize_tsne_and_clusters(tx, ty, list(set(labels)), labels,
+                                    vis_kmeans)
+
+        vis_spec = save + "{}_affinity_spec.png".format(g)
+        visualize_tsne_and_clusters(spec.affinity_matrix_[:,0],spec.affinity_matrix_[:,1], list(set(clusters)), clusters, vis_spec)
+        vis_kmeans = save + "{}_affinity_kmeans.png".format(g)
+        visualize_tsne_and_clusters(spec.affinity_matrix_[:,0],spec.affinity_matrix_[:,1], list(set(pure_kmeans.labels_)), pure_kmeans.labels_,
+                                   vis_kmeans)
+        vis_kmeans = save + "{}_affinity_lab_kmeans.png".format(g)
+        visualize_tsne_and_clusters(spec.affinity_matrix_[:, 0], spec.affinity_matrix_[:, 1],
+                                   list(set(labels)), labels,
+                                   vis_kmeans)
+
 
         df = pd.DataFrame(files, columns=["file_name"])
         df['label'] = list(file_to_label.values())
-        df['features'] = list(features)
+        print("label len ", len(df['label']))
+        #df['features'] = list(features)
         df['spectral_c'] = clusters
+        print("len spec ", len(df['spectral_c']))
         df['kmeans_c'] = pure_kmeans.labels_
+        print("len kmeans ", len(df['kmeans_c']))
         df.to_csv(folder + "{}_clusters.csv".format(g), index=False)
 
         dfr = pd.read_csv(folder + "{}_clusters.csv".format(g))
@@ -273,8 +309,8 @@ if __name__ == '__main__':
         kmeans= {}
         for _,val in enumerate(dfr.values):
             lab = val[1]
-            spec_c = val[3]
-            kmeans_c = val[4]
+            spec_c = val[2]
+            kmeans_c = val[3]
 
             spec = createdict(spec,spec_c,lab,n_clusters)
             kmeans = createdict(kmeans,kmeans_c,lab,n_clusters)
@@ -290,10 +326,3 @@ if __name__ == '__main__':
             os.mkdir(kmeans_dir)
         kmeans_path = kmeans_dir
         createPiePlots(kmeans,kmeans_path)
-
-
-
-
-
-
-

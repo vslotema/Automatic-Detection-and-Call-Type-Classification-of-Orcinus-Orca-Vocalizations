@@ -20,7 +20,7 @@ folder = ARGS.res_dir
 
 data_dir = ARGS.data_dir
 
-test_files, file_to_label_test = findcsv("test",data_dir)
+test_files, file_to_label_test = findcsv("unseen",data_dir)
 
 print("len test files ", len(test_files))
 print("len file_to_label_test ", len(file_to_label_test))

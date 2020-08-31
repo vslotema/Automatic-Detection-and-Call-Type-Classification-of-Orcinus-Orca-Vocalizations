@@ -224,12 +224,16 @@ if __name__ == '__main__':
         return ID
 
 
-    def spec(spec, ID):
-        fig = plt.Figure()
-        canvas = FigureCanvas(fig)
-        ax = fig.add_subplot(111)
-        librosa.display.specshow(spec, sr=44100, ax=ax, x_axis='time', y_axis=ARGS.freq_compress)
-        fig.savefig(ID)
+    def spec(spec1, spec2, ID):
+
+        plt.subplot(121)
+        librosa.display.specshow(spec1.T, sr=44100, x_axis='time', y_axis=ARGS.freq_compress)
+        plt.title("encoded")
+
+        plt.subplot(122)
+        librosa.display.specshow(spec2.T, sr=44100, x_axis='time', y_axis=ARGS.freq_compress)
+        plt.title("decoded")
+        plt.savefig(ID)
         plt.close()
 
     os.mkdir(dir + "spec")
@@ -238,5 +242,5 @@ if __name__ == '__main__':
         ID = getID(test_files[i])
         original = np.squeeze(_original[i], axis=2)
         recon = np.squeeze(decoded[i], axis=2)
-        spec(original, dir + "spec/" + ID + "_original.png")
-        spec(recon, dir + "spec/" + ID + "_decoded.png")
+        spec(original, recon,dir + "spec/" + ID + ".png")
+        #spec(recon, dir + "spec/" + ID + "_decoded.png")

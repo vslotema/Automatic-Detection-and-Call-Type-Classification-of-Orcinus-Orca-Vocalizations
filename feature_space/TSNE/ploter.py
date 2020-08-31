@@ -1,3 +1,5 @@
+# Most methods by (c) Juanitor Duz https://github.com/juanitorduz/website_projects/blob/master/Python/spectral_clustering.ipynb
+
 from matplotlib import pyplot as plt
 from itertools import cycle, islice
 import numpy as np

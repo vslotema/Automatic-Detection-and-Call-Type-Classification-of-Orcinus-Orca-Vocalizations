@@ -141,6 +141,8 @@ if __name__ == '__main__':
     mcheckpoint = ModelCheckpoint(check, monitor='val_acc', save_best_only=True, mode='max')
     logger = keras.callbacks.CSVLogger(HISTORY_CSV,separator=",",append=True)
 
+    for i in range(5):
+
     if ARGS.model is None:
         print("[INFO] compiling model...")
         model = Resnet18.ResnetBuilder.build_resnet_18((128, 256, 1), 1)
