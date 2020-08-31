@@ -6,6 +6,7 @@ from random import shuffle
 import math
 import numpy as np
 
+
 class Dataloader(keras.utils.Sequence):
 
     n_mels = 256
@@ -21,15 +22,22 @@ class Dataloader(keras.utils.Sequence):
     min_level_db = -100
     ref_level_db = 20
 
-    def __init__(self,augment=False,freq_compress='linear'):
+    def __init__(self,noise_files,augment=False,freq_compress='linear',addnoise=False):
+        if noise_files is None:
+            self.noise_files = []
+        else:
+            self.noise_files = noise_files
         self.Aug = augment
         self.window = np.hanning(self.n_fft)
         self.freq_compress = freq_compress
+        if not augment:
+            self.center = True
+        self.addnoise = addnoise
 
     def load_audio_file(self, file_path):
         y, sr = librosa.core.load(file_path, sr=44100, mono=True)
         y = self.preEmphasize(y)
-        data = self.preprocess_audio(np.squeeze(y,0))
+        data = self.preprocess_audio(np.squeeze(y,0),file_path)
         return data
 
     def preEmphasize(self,y):
@@ -37,7 +45,7 @@ class Dataloader(keras.utils.Sequence):
         y = np.concatenate((np.expand_dims(y[:, 0], -1), y[:, 1:] - self.coef * y[:, :-1]), -1)
         return y
 
-    def preprocess_audio(self, y):
+    def preprocess_audio(self, y,file_path):
 
         spec = self.spectrogram(y)
 
@@ -47,9 +55,13 @@ class Dataloader(keras.utils.Sequence):
         if self.freq_compress == "linear":
             spec = self.Interpolate(spec)
         else:
-            #spec = librosa.feature.melspectrogram(S=spec, n_fft=spec.shape[0], hop_length=self.hop_length, sr=self.sample_r,
-                     #                         fmin=self.fmin, fmax=self.fmax, n_mels=self.n_mels,center=self.center)
             spec = self.MelFrequency(spec)
+
+        noise_spec = None
+        if self.addnoise:
+            #idx = np.random.randint(0,len(self.noise_files)-1)
+           # noise_file = self.noise_files[idx]
+            spec = self.addRandomNoise(spec,file_path)
 
         spec = librosa.power_to_db(abs(spec))
         spec = np.clip((spec - self.ref_level_db - self.min_level_db) / -self.min_level_db,a_min=0,a_max=1)
@@ -58,10 +70,48 @@ class Dataloader(keras.utils.Sequence):
         return spec.T
 
     def spectrogram(self, y):
-        spec = librosa.core.stft(y, n_fft=self.n_fft, center=False, hop_length=self.hop_length, window='hann')
+        spec = librosa.core.stft(y, n_fft=self.n_fft, center=self.center, hop_length=self.hop_length, window='hann')
         div = math.sqrt(np.power(self.window, 2).sum())
         spec /= div
         return np.power(spec, 2)
+
+    def addRandomNoise(self,spec,noise_file):
+
+        y, sr = librosa.core.load(noise_file, sr=44100, mono=True)
+        y = self.preEmphasize(y)
+        noise_spec = self.spectrogram(np.squeeze(y, 0))
+
+        sampler = lambda x: np.random.randint(
+            0, x, size=(1,), dtype='long'
+        ).item()
+        noise_spec = sampling(noise_spec, sampler, seq_length=spec.shape[1] * 2)
+        noise_spec = randomTimeStretch(noise_spec)
+        noise_spec = randomPitchShift(noise_spec)
+        if self.freq_compress == "linear":
+            noise_spec = self.Interpolate(noise_spec)
+        else:
+            noise_spec = self.MelFrequency(noise_spec)
+
+        spec = paddingorsampling(spec, 128, True)
+
+        if spec.shape[1] > noise_spec.shape[1]:
+            n_repeat = int(math.ceil(spec.shape[1] / noise_spec.shape[1]))
+            noise_spec = noise_spec.repeat(n_repeat, 1)
+        if spec.shape[1] < noise_spec.shape[1]:
+            high = noise_spec.shape[1] - spec.shape[1]
+            start = np.random.randint(0, high, size=(1,), dtype='long')
+            end = start + spec.shape[1]
+            noise_spec_part = noise_spec[:,start[0]:end[0]]
+        else:
+            noise_spec_part = noise_spec
+
+        snr = np.random.randint(-3, 12, size=(1,)).astype("float64")
+        signal_power = spec.sum()
+        noise_power = noise_spec_part.sum()
+
+        K = (signal_power / noise_power) * 10 ** (-snr / 10)
+        spectrogram_aug = spec + noise_spec_part * K
+        return spectrogram_aug
 
     def augmentation(self,spec):
         spec = randomAmplitude(spec)
@@ -124,12 +174,16 @@ class Dataloader(keras.utils.Sequence):
 
 class Train_Generator(keras.utils.Sequence):
 
-    def __init__(self, split, list_files, file_to_int,freq_compress='linear', augment=False, batch_size=32):
+    def __init__(self, split, list_files, file_to_int,freq_compress='linear', augment=False, batch_size=32,add_noise=False):
         self.split = split
         self.data = list_files
         self.batch_size = batch_size
         self.file_to_int = file_to_int
-        self.dl = Dataloader(augment,freq_compress=freq_compress)
+        self.add_noise = add_noise
+        if add_noise:
+            self.dl= Dataloader(list_files,augment,freq_compress=freq_compress,addnoise=True)
+        else:
+            self.dl = Dataloader(None,augment,freq_compress=freq_compress)
 
     def __len__(self):
         if self.split == "train":

@@ -1,9 +1,7 @@
 from keras.models import model_from_json
 from pathlib import Path
-from keras.preprocessing import image
 import numpy as np
-from sklearn.metrics import confusion_matrix, matthews_corrcoef, roc_auc_score, roc_curve
-from sklearn.preprocessing import label_binarize
+from sklearn.metrics import confusion_matrix, matthews_corrcoef
 from Train_Generator import Dataloader
 import pandas as pd
 from tqdm import tqdm
@@ -22,7 +20,7 @@ folder = ARGS.res_dir
 
 data_dir = ARGS.data_dir
 
-test_files, file_to_label_test = findcsv("test",data_dir)
+test_files, file_to_label_test = findcsv("unseen",data_dir)
 
 print("len test files ", len(test_files))
 print("len file_to_label_test ", len(file_to_label_test))
@@ -45,7 +43,7 @@ print('label_to_int ', label_to_int)
 
 file_to_int = {k: label_to_int[v] for k, v in file_to_label_test.items()}
 
-dl = Dataloader(file_to_int,False,freq_compress=ARGS.freq_compress)
+dl = Dataloader(False,freq_compress=ARGS.freq_compress)
 
 bag = 1
 

@@ -31,7 +31,7 @@ cm_df = pd.DataFrame(cm,
 
 fig = plt.figure(figsize=(5,5))
 sns.heatmap(cm_df, annot=True,fmt='d')
-plt.title('Test Accuracy: {0:.3f}'.format(accuracy_score(results.label.values, results.pred_label.values)))
+plt.title('SVM Linear Kernel \nAccuracy:{0:.3f}'.format(accuracy_score(results.label.values, results.pred_label.values)))
 plt.ylabel('True label')
 plt.xlabel('Predicted label')
 plt.show()
@@ -53,39 +53,20 @@ print('F1 score: {:.3f}'.format(f1*100))
 f.write('F1 score: {:.3f}\n'.format(f1*100) )
 
 ############## ROC CURVE
+fig = plt.figure(figsize=(5,5))
+fpr, tpr, thresholds = roc_curve(results.label.values,results.pred_score.values,pos_label = ARGS.pos_label)
+sns.lineplot([0,1], [0,1], linestyle='--')
+
+sns.lineplot(fpr,tpr,marker='.')
+plt.show()
+fig.savefig(path + "roc_curve.png")
 auc_score = 0
 try:
     auc_score = roc_auc_score(results.label.values,results.pred_score.values)
 except ValueError:
     pass
+
 print('AUC: {:.3f}'.format(auc_score*100))
 f.write('AUC: {:.3f}'.format(auc_score*100))
-fpr, tpr, thresholds = roc_curve(results.label.values,results.pred_score.values,pos_label = ARGS.pos_label)
-plt.figure()
-lw = 2
-plt.plot(fpr, tpr, color='darkorange',
-         lw=lw, label='ROC curve (area = %0.5f)' % auc_score)
-plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('ROC')
-plt.legend(loc="lower right")
-plt.show()
-
-#fig = plt.figure(figsize=(5,5))
-#fpr, tpr, thresholds = roc_curve(results.label.values,results.pred_score.values,pos_label = ARGS.pos_label)
-#sns.lineplot([0,1], [0,1], linestyle='--')
-
-#sns.lineplot(fpr,tpr,marker='.')
-#plt.legend('AUC {}'.format(auc_score),loc='best')
-#plt.show()
-plt.savefig(path + "roc_curve.png")
-
-
-
-
-
 
 ##############

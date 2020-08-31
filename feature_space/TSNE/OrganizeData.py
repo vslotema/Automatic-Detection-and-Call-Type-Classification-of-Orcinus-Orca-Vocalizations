@@ -35,7 +35,7 @@ def findcsv(tvt, data_dir):
     with open(data_dir + tvt, 'rb') as fp:
         lines = [l.decode('utf8', 'ignore') for l in fp.readlines()]
         for i in lines:
-            csvpath = data_dir + i
+            csvpath = data_dir + i.replace("\n","")
             if re.findall("/", i):
                 path_wav = data_dir + findpathwav(i)
             else:
@@ -54,13 +54,13 @@ def unique(list):
     return sorted(unique)
 
 def getUniqueLabels(data_dir):
-    tvt = ["train","val","test"]
+    tvt = ["train","test","val"]
     u_labels = []
     for i in tvt:
         with open(data_dir + i, 'rb') as fp:
             lines = [l.decode('utf8', 'ignore') for l in fp.readlines()]
             for i in lines:
-                csvpath = data_dir + i
+                csvpath = data_dir + i.replace("\n","")
                 df = pd.read_csv(csvpath)
                 u_labels += df.label.values.tolist()
     u_labels = unique(u_labels)

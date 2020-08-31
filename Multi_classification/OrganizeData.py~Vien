@@ -66,7 +66,4 @@ def getUniqueLabels(data_dir):
                 df = pd.read_csv(csvpath)
                 u_labels += df.label.values.tolist()
     u_labels = unique(u_labels)
-    if len(u_labels) is not 2:
-        print("labels ", u_labels)
-        raise Exception("Number of unique labels should be 2")
     return u_labels
