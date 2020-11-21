@@ -8,5 +8,6 @@ Required arguments:
 --data-dir
 --res-dir -> need to create directory beforehand, not done by the script.
 
-To generate augmented noise files using librosa
+To generate augmented noise WAV files using librosa for pitch-shifting, time-stretching and adding random noise
+
 e.g. python3 generate_noise.py --data-dir /Users/charlottekruss/THESIS/DeepAL/noises/ --pitch-shift 1 --time-stretch 1 --add-noise 1
