@@ -16,4 +16,4 @@ e.g. python3 generate_noise.py --data-dir /Users/charlottekruss/THESIS/DeepAL/no
 Required arguments:
 
 --data-dir
---pitch-shift 0 or 1 --time-stretch 0 or 1 --add-noise 0 or 1 -> set augmentation method to true with 1 
+--pitch-shift 0 or 1 --time-stretch 0 or 1 --add-noise 0 or 1 -> set augmentation methods to true with 1 
