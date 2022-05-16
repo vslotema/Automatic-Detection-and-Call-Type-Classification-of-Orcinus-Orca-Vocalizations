@@ -18,7 +18,7 @@ All experiments were built using Keras, python3, and libraries such as Pandas, s
 
 The learning rate automatically decreased by a factor of 0.5 if there was no improvement in the validation accuracy after 4 epochs and the training would stop if there was no improvement in the validation accuracy after 10 epochs.
 
-## Multi Classifier
+## Multiclass Classifier
 
 ![Screenshot](multi_classifier.png)
 
